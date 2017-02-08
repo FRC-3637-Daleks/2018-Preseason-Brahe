@@ -10,21 +10,29 @@
 #include <WPILib.h>
 #include <CANTalon.h>
 #include <Brahe.h>
+#include <DalekDrive.h>
 
 class Robot: public frc::IterativeRobot
 {
 public:
-	CANTalon *leftMotor, *rightMotor;
+	CANTalon *leftMotor, *rightMotor, *leftSlave, *rightSlave;
 	Joystick *leftJoystick, *rightJoystick;
+	DalekDrive *d;
 
 	void
 	RobotInit()
 	{
-		leftMotor  = new CANTalon(LEFT_FRONT_DRIVEMOTOR);
-		rightMotor = new CANTalon(RIGHT_FRONT_DRIVEMOTOR);
+		leftMotor  = new CANTalon(LEFT_DRIVEMOTOR);
+		leftSlave  = new CANTalon(LEFT_SLAVEMOTOR);
+		rightMotor = new CANTalon(RIGHT_DRIVEMOTOR);
+		rightSlave = new CANTalon(RIGHT_SLAVEMOTOR);
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
+
+		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave,
+				SHIFT_FORWARD, SHIFT_REVERSE);
+
 
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
@@ -35,7 +43,6 @@ public:
 	AutonomousInit() override
 	{
 		autoSelected = chooser.GetSelected();
-		// std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 		std::cout << "Auto selected: " << autoSelected << std::endl;
 
 		if (autoSelected == autoNameCustom) {
@@ -57,18 +64,22 @@ public:
 
 	void TeleopInit()
 	{
-
+		autoSelected = chooser.GetSelected();
 	}
 
 	void TeleopPeriodic()
 	{
-		double y1, y2;
+		bool useArcade;
 
-		y1 = leftJoystick->GetY();
-		y2 = rightJoystick->GetY();
+		useArcade = (leftJoystick->GetZ() == -1.0);
 
-		leftMotor->Set(y1);
-		rightMotor->Set(y2);
+		if (!useArcade)
+			d->TankDrive(leftJoystick, rightJoystick);
+		else
+			d->ArcadeDrive(leftJoystick);
+
+		if(leftJoystick->GetTrigger())
+			d->ShiftGear();
 	}
 
 	void TestPeriodic()
@@ -80,7 +91,7 @@ private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> chooser;
 	const std::string autoNameDefault = "Default";
-	const std::string autoNameCustom = "My Auto";
+	const std::string autoNameCustom = "My Auto Mode";
 	std::string autoSelected;
 };
 
