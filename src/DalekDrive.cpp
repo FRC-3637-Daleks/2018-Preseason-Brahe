@@ -224,7 +224,7 @@ DalekDrive::InitDalekDrive(void)
 	m_leftMotor->SetSensorDirection(true);
 	m_rightMotor->SetSensorDirection(false);
 	m_leftMotor->SetInverted(false);
-	m_rightMotor->SetInverted(true);
+	m_rightMotor->SetInverted(false);
 	if(m_leftSlaveMotor) {
 		m_leftSlaveMotor->SetControlMode(CANTalon::ControlMode::kFollower);
 		m_leftSlaveMotor->Set(m_leftMotor->GetDeviceID());
