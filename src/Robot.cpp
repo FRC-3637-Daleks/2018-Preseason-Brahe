@@ -33,7 +33,6 @@ public:
 		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave,
 				SHIFT_FORWARD, SHIFT_REVERSE);
 
-
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
 		frc::SmartDashboard::PutData("Auto Modes", &chooser);
@@ -77,7 +76,8 @@ public:
 			d->TankDrive(leftJoystick, rightJoystick);
 		else
 			d->ArcadeDrive(leftJoystick);
-
+		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
+		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
 		if(leftJoystick->GetTrigger())
 			d->ShiftGear();
 	}
