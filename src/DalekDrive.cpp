@@ -217,12 +217,18 @@ DalekDrive::InitDalekDrive(void)
 	// Configure the Talon's as needed
 	m_leftMotor->ConfigNeutralMode(CANTalon::kNeutralMode_Brake);
 	m_rightMotor->ConfigNeutralMode(CANTalon::kNeutralMode_Brake);
+	m_leftMotor->ConfigNominalOutputVoltage(0.0f, -0.0f);
+	m_rightMotor->ConfigNominalOutputVoltage(0.0f, -0.0f);
+	m_leftMotor->ConfigPeakOutputVoltage(+12.0f, -12.0f);
+	m_rightMotor->ConfigPeakOutputVoltage(+12.0f, -12.0f);
 	m_leftMotor->SetFeedbackDevice(CANTalon::FeedbackDevice::QuadEncoder);
 	m_rightMotor->SetFeedbackDevice(CANTalon::FeedbackDevice::QuadEncoder);
-	m_leftMotor->ConfigEncoderCodesPerRev(ENCODER_TICKS_PER_REV*4);
-	m_rightMotor->ConfigEncoderCodesPerRev(ENCODER_TICKS_PER_REV*4);
+	m_leftMotor->ConfigEncoderCodesPerRev(ENCODER_TICKS_PER_REV);
+	m_rightMotor->ConfigEncoderCodesPerRev(ENCODER_TICKS_PER_REV);
 	m_leftMotor->SetSensorDirection(true);
 	m_rightMotor->SetSensorDirection(false);
+	m_leftMotor->SetPosition(0);
+	m_rightMotor->SetPosition(0);
 	m_leftMotor->SetInverted(false);
 	m_rightMotor->SetInverted(false);
 	if(m_leftSlaveMotor) {
@@ -236,26 +242,95 @@ DalekDrive::InitDalekDrive(void)
 		m_rightSlaveMotor->SetInverted(false);
 	}
 	if(m_gearShift)
-		m_gearShift->Set(DoubleSolenoid::kForward);
+		ShiftGear(HIGH_GEAR);
 }
 
 void
-DalekDrive::ShiftGear()
+DalekDrive::ShiftGear(GearType_t speed)
 {
+	// Assumes that the forward setting of the solenoid == HIGH_GEAR
 	if(m_gearShift) {
-		DoubleSolenoid::Value current = m_gearShift->Get();
-		switch(current) {
-		case DoubleSolenoid::kForward:
+		switch(speed) {
+		case HIGH_GEAR:
+			m_gearShift->Set(DoubleSolenoid::kForward);
+			break;
+		case LOW_GEAR:
 			m_gearShift->Set(DoubleSolenoid::kReverse);
-			break;
-		case DoubleSolenoid::kReverse:
-			m_gearShift->Set(DoubleSolenoid::kForward);
-			break;
-		case DoubleSolenoid::kOff:
-			m_gearShift->Set(DoubleSolenoid::kForward);
 			break;
 		default:
 			break;
 		}
 	}
+}
+
+void
+DalekDrive::sendFaults(MotorType_t p, int faults)
+{
+	if(p == LEFT_DRIVEMOTOR) {
+		frc::SmartDashboard::PutNumber("Left Talon reported faults", faults);
+		if(m_leftSlaveMotor) {
+			frc::SmartDashboard::PutNumber("Left slave status",
+					m_leftSlaveMotor->GetFaults());
+		}
+	}
+	if(p == RIGHT_DRIVEMOTOR) {
+		frc::SmartDashboard::PutNumber("Right Talon reported faults", faults);
+		if(m_rightSlaveMotor) {
+			frc::SmartDashboard::PutNumber("Right slave status",
+					m_rightSlaveMotor->GetFaults());
+		}
+	}
+	return;
+}
+
+bool
+DalekDrive::DriveOk()
+{
+	CANTalon::FeedbackDeviceStatus estat;
+	int mstat;
+
+	// update dashboard of current draw for motors
+	frc::SmartDashboard::PutNumber("Left Motor current",
+			m_leftMotor->GetOutputCurrent());
+	if(m_leftSlaveMotor)
+		frc::SmartDashboard::PutNumber("Left Slave Motor current",
+			m_leftSlaveMotor->GetOutputCurrent());
+	frc::SmartDashboard::PutNumber("Right Motor current",
+			m_rightMotor->GetOutputCurrent());
+	if(m_rightSlaveMotor)
+		frc::SmartDashboard::PutNumber("Right Slave Motor current",
+			m_rightSlaveMotor->GetOutputCurrent());
+
+	// check sensor status
+	estat = m_leftMotor->IsSensorPresent(CANTalon::FeedbackDevice::QuadEncoder);
+	if(estat != CANTalon::FeedbackDeviceStatus::FeedbackStatusPresent)
+		return false;
+	estat = m_rightMotor->IsSensorPresent(CANTalon::FeedbackDevice::QuadEncoder);
+	if(estat != CANTalon::FeedbackDeviceStatus::FeedbackStatusPresent)
+		return false;
+
+	// check for motor faults
+	mstat = m_leftMotor->GetFaults();
+	if(mstat != 0) {
+		sendFaults(LEFT_DRIVEMOTOR, mstat);
+		return false;
+	}
+	mstat = m_leftMotor->GetStickyFaults();
+	if(mstat) {
+		sendFaults(LEFT_DRIVEMOTOR, mstat);
+		m_leftMotor->ClearStickyFaults();
+		return false;
+	}
+
+	mstat = m_rightMotor->GetFaults();
+	if(mstat) {
+		sendFaults(RIGHT_DRIVEMOTOR, mstat);
+		return false;
+	}
+	mstat = m_rightMotor->GetStickyFaults();
+	if(mstat) {
+		sendFaults(RIGHT_DRIVEMOTOR, mstat);
+		return false;
+	}
+	return true;
 }

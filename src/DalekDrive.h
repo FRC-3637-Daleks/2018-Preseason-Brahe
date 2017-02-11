@@ -12,11 +12,6 @@
 /*----------------------------------------------------------------------------*/
 
 #pragma once
-
-#include <memory>
-#include <sstream>
-#include <WPILib.h>
-#include <CANTalon.h>
 #include <Brahe.h>
 
 /*
@@ -57,17 +52,12 @@ class DalekDrive {
 	void SetInvertedMotor(MotorType_t motor, bool isInverted);
 	void SetSensitivity(double sensitivity);
 	void SetMaxOutput(double maxOutput);
-	void ShiftGear();
+	void ShiftGear(GearType_t speed);
+	bool DriveOk();
 
  protected:
 	void InitDalekDrive();
-	double Limit(double num);
-	void Normalize(double* wheelSpeeds);
-	void RotateVector(double& x, double& y, double angle);
-
-	static const int kMaxNumberOfMotors = 4;
-	double m_sensitivity = 0.5;
-	double m_maxOutput = 1.0;
+	void sendFaults(MotorType_t drive, int faults);
 	CANTalon *m_leftMotor;
 	CANTalon *m_rightMotor;
 	CANTalon *m_leftSlaveMotor;
