@@ -15,19 +15,18 @@
 
 using namespace frc;
 
-Claw::Claw(int pistonA, int pistonB, int pivotA, int pivotB, int arm,
-		int gearSwitch, int pegSwitch)
+Claw::Claw(int piston, int pivot, int arm, int gearSwitch, int pegSwitch)
 {
-	m_piston     = new DoubleSolenoid(pistonA, pistonB);
-	m_pivot      = new DoubleSolenoid(pivotA, pivotB);
-	m_arm        = new Solenoid(arm);
+	m_piston     = new Solenoid(PCM_ID, piston);
+	m_pivot      = new Solenoid(PCM_ID, pivot);
+	m_arm        = new Solenoid(PCM_ID, arm);
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = true;
 	return;
 }
 
-Claw::Claw(DoubleSolenoid *piston, DoubleSolenoid *pivot, Solenoid *arm,
+Claw::Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
 		int gearSwitch, int pegSwitch)
 {
 	m_piston     = piston;
@@ -39,7 +38,7 @@ Claw::Claw(DoubleSolenoid *piston, DoubleSolenoid *pivot, Solenoid *arm,
 	return;
 }
 
-Claw::Claw(DoubleSolenoid &piston, DoubleSolenoid &pivot, Solenoid &arm,
+Claw::Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
 		int gearSwitch, int pegSwitch)
 {
 	m_piston     = &piston;
@@ -49,42 +48,6 @@ Claw::Claw(DoubleSolenoid &piston, DoubleSolenoid &pivot, Solenoid &arm,
 	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = false;
 	return;
-}
-
-void
-Claw::OpenPiston()
-{
-	m_piston->Set(frc::DoubleSolenoid::kForward);
-}
-
-void
-Claw::ClosePiston()
-{
-	m_piston->Set(frc::DoubleSolenoid::kReverse);
-}
-
-void
-Claw::OpenPivot()
-{
-	m_pivot->Set(frc::DoubleSolenoid::kForward);
-}
-
-void
-Claw::ClosePivot()
-{
-	m_pivot->Set(frc::DoubleSolenoid::kReverse);
-}
-
-void
-Claw::OpenArms()
-{
-	m_arm->Set(true);
-}
-
-void
-Claw::CloseArms()
-{
-	m_arm->Set(false);
 }
 
 Claw::~Claw()
@@ -97,3 +60,53 @@ Claw::~Claw()
 		delete m_pivot;
 	}
 }
+
+void
+Claw::OpenPiston()
+{
+	m_piston->Set(true);
+}
+
+void
+Claw::ClosePiston()
+{
+	m_piston->Set(false);
+}
+
+void
+Claw::OpenPivot()
+{
+	m_pivot->Set(false);
+}
+
+void
+Claw::ClosePivot()
+{
+	m_pivot->Set(true);
+}
+
+void
+Claw::OpenClaw()
+{
+	m_arm->Set(true);
+}
+
+void
+Claw::CloseClaw()
+{
+	m_arm->Set(false);
+}
+
+bool
+Claw::IsGearPresent()
+{
+	return (m_gearSwitch->Get() == 1);
+}
+
+bool
+Claw::IsPegPresent()
+{
+	return (m_pegSwitch->Get() == 1);
+}
+
+

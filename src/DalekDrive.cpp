@@ -25,13 +25,13 @@ DalekDrive::DalekDrive(int leftMotorChannel, int rightMotorChannel)
 
 DalekDrive::DalekDrive(int leftMotorChannel, int leftSlaveMotorChannel,
          int rightMotorChannel, int rightSlaveMotorChannel,
-		 int forwardChannel, int reverseChannel)
+		 int shiftChannel)
 {
 	m_leftMotor       = new CANTalon(leftMotorChannel);
 	m_rightMotor      = new CANTalon(rightMotorChannel);
 	m_leftSlaveMotor  = new CANTalon(leftSlaveMotorChannel);
 	m_rightSlaveMotor = new CANTalon(rightSlaveMotorChannel);
-	m_gearShift       = new DoubleSolenoid(forwardChannel, reverseChannel);
+	m_gearShift       = new Solenoid(PCM_ID, shiftChannel);
 	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
 	InitDalekDrive();
 
@@ -66,13 +66,13 @@ DalekDrive::DalekDrive(CANTalon& leftMotor, CANTalon& rightMotor)
 
 DalekDrive::DalekDrive(CANTalon* leftMotor, CANTalon* leftSlaveMotor,
          CANTalon* rightMotor, CANTalon* rightSlaveMotor,
-		 int forwardChannel, int reverseChannel)
+		 int shiftChannel)
 {
 	m_leftMotor       = leftMotor;
 	m_leftSlaveMotor  = leftSlaveMotor;
 	m_rightMotor      = rightMotor;
 	m_rightSlaveMotor = rightSlaveMotor;
-	m_gearShift       = new DoubleSolenoid(forwardChannel, reverseChannel);
+	m_gearShift       = new Solenoid(PCM_ID, shiftChannel);
 	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
 	InitDalekDrive();
 
@@ -81,13 +81,13 @@ DalekDrive::DalekDrive(CANTalon* leftMotor, CANTalon* leftSlaveMotor,
 
 DalekDrive::DalekDrive(CANTalon& leftMotor, CANTalon& leftSlaveMotor,
          CANTalon& rightMotor, CANTalon& rightSlaveMotor,
-		 int forwardChannel, int reverseChannel)
+		 int shiftChannel)
 {
 	m_leftMotor       = &leftMotor;
 	m_leftSlaveMotor  = &leftSlaveMotor;
 	m_rightMotor      = &rightMotor;
 	m_rightSlaveMotor = &rightSlaveMotor;
-	m_gearShift       = new DoubleSolenoid(forwardChannel, reverseChannel);
+	m_gearShift       = new Solenoid(PCM_ID, shiftChannel);
 	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
 	InitDalekDrive();
 
@@ -252,10 +252,10 @@ DalekDrive::ShiftGear(GearType_t speed)
 	if(m_gearShift) {
 		switch(speed) {
 		case HIGH_GEAR:
-			m_gearShift->Set(DoubleSolenoid::kForward);
+			m_gearShift->Set(false);
 			break;
 		case LOW_GEAR:
-			m_gearShift->Set(DoubleSolenoid::kReverse);
+			m_gearShift->Set(true);
 			break;
 		default:
 			break;

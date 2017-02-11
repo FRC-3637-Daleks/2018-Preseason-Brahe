@@ -19,6 +19,7 @@ public:
 	Compressor *c;
 	CANTalon *leftMotor, *rightMotor, *leftSlave, *rightSlave;
 	Joystick *leftJoystick, *rightJoystick;
+	XboxController *xbox;
 	DalekDrive *d;
 	Claw *claw;
 
@@ -32,13 +33,12 @@ public:
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
+		xbox          = new XboxController(XBOX_CONTROLS);
 
 		// CameraServer::GetInstance()->StartAutomaticCapture();
-		c = new Compressor();
-		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave,
-				SHIFT_A, SHIFT_B);
-		claw = new Claw(PISTON_A, PISTON_B, PIVOT_A, PIVOT_B, ARM,
-				GEAR_SWITCH, PEG_SWITCH);
+		c = new Compressor(PCM_ID);
+		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
+		claw = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH, PEG_SWITCH);
 
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
@@ -89,6 +89,8 @@ public:
 			d->ShiftGear(LOW_GEAR);
 		if(rightJoystick->GetTrigger())
 			d->ShiftGear(HIGH_GEAR);
+
+		DashboardUpdates();
 	}
 
 	void TestPeriodic()

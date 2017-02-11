@@ -11,17 +11,18 @@
 #include <CANTalon.h>
 
 enum DriveMotors { LEFT_DRIVEMOTOR = 1, LEFT_SLAVEMOTOR, RIGHT_DRIVEMOTOR, RIGHT_SLAVEMOTOR, NUM_DRIVE_MOTORS };
-enum Joysticks   { LEFT_JOYSTICK = 0, RIGHT_JOYSTICK, NUM_JOYSTICKS };
+enum Joysticks   { LEFT_JOYSTICK = 0, RIGHT_JOYSTICK, XBOX_CONTROLS, NUM_JOYSTICKS };
 enum Gears       { LOW_GEAR, HIGH_GEAR, NUM_GEARS };
 
+// Compressor
+#define PCM_ID 14
+
 // Solenoids
-#define SHIFT_A 1
-#define SHIFT_B 2
-#define PIVOT_A 3
-#define PIVOT_B 4
-#define PISTON_A 5
-#define PISTON_B 6
-#define ARM 7
+#define ARM 0
+#define PIVOT 1
+#define PISTON 2
+#define CLIMB 3
+#define SHIFTER 4
 
 // Digital inputs
 #define GEAR_SWITCH 1

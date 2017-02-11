@@ -16,23 +16,25 @@
 
 class Claw {
 public:
-	Claw(int pistonA, int pistonB, int pivotA, int pivotB, int arms,
+	Claw(int piston, int pivot, int arms,
 			int gearSwitch, int pegSwitch);
-	Claw(DoubleSolenoid *piston, DoubleSolenoid *pivot, Solenoid *arm,
+	Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
 			int gearSwitch, int pegSwitch);
-	Claw(DoubleSolenoid &piston, DoubleSolenoid &pivot, Solenoid &arm,
+	Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
 			int gearSwtich, int pegSwitch);
 	void OpenPiston();
 	void ClosePiston();
-	void OpenArms();
-	void CloseArms();
+	void OpenClaw();
+	void CloseClaw();
 	void OpenPivot();
 	void ClosePivot();
+	bool IsGearPresent();
+	bool IsPegPresent();
 	~Claw();
 
 private:
-	DoubleSolenoid *m_piston;
-	DoubleSolenoid *m_pivot;
+	Solenoid *m_piston;
+	Solenoid *m_pivot;
 	Solenoid *m_arm;
 	DigitalInput *m_gearSwitch;
 	DigitalInput *m_pegSwitch;

@@ -26,15 +26,15 @@ class DalekDrive {
 	DalekDrive(int leftMotorChannel, int rightMotorChannel);
 	DalekDrive(int leftMotorChannel, int leftSlaveMotorChannel,
              int rightMotorChannel, int rightSlaveMotorChannel,
-			 int forwardChannel, int reverseChannel);
+			 int shiftChannel);
 	DalekDrive(CANTalon* leftMotor, CANTalon* rightMotor);
 	DalekDrive(CANTalon& leftMotor, CANTalon& rightMotor);
 	DalekDrive(CANTalon* leftMotor, CANTalon* leftSlaveMotor,
              CANTalon* rightMotor, CANTalon* rightSlaveMotor,
-			 int forwardChannel, int reverseChannel);
+			 int shiftChannel);
 	DalekDrive(CANTalon& leftMotor, CANTalon& leftSlaveMotor,
              CANTalon& rightMotor, CANTalon& rightSlaveMotor,
-			 int forwardChannel, int reverseChannel);
+			 int shiftChannel);
 	~DalekDrive();
 
 	void Drive(double outputMagnitude, double curve);
@@ -62,7 +62,7 @@ class DalekDrive {
 	CANTalon *m_rightMotor;
 	CANTalon *m_leftSlaveMotor;
 	CANTalon *m_rightSlaveMotor;
-	DoubleSolenoid *m_gearShift;
+	Solenoid *m_gearShift;
 	frc::RobotDrive *m_drive;
 	bool m_needFree;
 };
