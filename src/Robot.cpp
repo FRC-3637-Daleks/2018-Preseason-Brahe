@@ -11,13 +11,16 @@
 #include <CANTalon.h>
 #include <Brahe.h>
 #include <DalekDrive.h>
+#include <Claw.h>
 
 class Robot: public frc::IterativeRobot
 {
 public:
+	Compressor *c;
 	CANTalon *leftMotor, *rightMotor, *leftSlave, *rightSlave;
 	Joystick *leftJoystick, *rightJoystick;
 	DalekDrive *d;
+	Claw *claw;
 
 	void
 	RobotInit()
@@ -30,8 +33,12 @@ public:
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 
+		// CameraServer::GetInstance()->StartAutomaticCapture();
+		c = new Compressor();
 		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave,
-				SHIFT_FORWARD, SHIFT_REVERSE);
+				SHIFT_A, SHIFT_B);
+		claw = new Claw(PISTON_A, PISTON_B, PIVOT_A, PIVOT_B, ARM,
+				GEAR_SWITCH, PEG_SWITCH);
 
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
@@ -43,7 +50,7 @@ public:
 	{
 		autoSelected = chooser.GetSelected();
 		std::cout << "Auto selected: " << autoSelected << std::endl;
-
+		c->Start();
 		if (autoSelected == autoNameCustom) {
 			// Custom Auto goes here
 		} else {
@@ -64,6 +71,7 @@ public:
 	void TeleopInit()
 	{
 		autoSelected = chooser.GetSelected();
+		c->Start();
 	}
 
 	void TeleopPeriodic()
@@ -76,10 +84,11 @@ public:
 			d->TankDrive(leftJoystick, rightJoystick);
 		else
 			d->ArcadeDrive(leftJoystick);
-		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
-		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
+
 		if(leftJoystick->GetTrigger())
-			d->ShiftGear();
+			d->ShiftGear(LOW_GEAR);
+		if(rightJoystick->GetTrigger())
+			d->ShiftGear(HIGH_GEAR);
 	}
 
 	void TestPeriodic()
@@ -87,6 +96,12 @@ public:
 		lw->Run();
 	}
 
+	void DashboardUpdates()
+	{
+		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
+		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
+
+	}
 private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> chooser;
