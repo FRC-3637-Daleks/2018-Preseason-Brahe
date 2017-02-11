@@ -7,11 +7,12 @@
 
 #ifndef SRC_CLIMBER_H_
 #define SRC_CLIMBER_H_
-#include <CANTalon.h>;
 #include <Solenoid.h>
+#include <WPILib.h>
+#include <CANTalon.h>
 class Climber {
  public:
-  Climber(int c, int p, int f, int r, XboxController xb);
+  Climber(int c, int p, int xb);
   void Switch();
   void Up(double speed);
   void Stop();

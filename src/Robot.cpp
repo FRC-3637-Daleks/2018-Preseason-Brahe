@@ -19,7 +19,7 @@ public:
 	Joystick *leftJoystick, *rightJoystick;
 	Climber *OlReliable;
 	XboxController *xBox;
-
+	CameraServer *GearCam;
 	void
 	RobotInit()
 	{
@@ -30,7 +30,8 @@ public:
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xBox = new XboxController(NUM_JOYSTICKS);
 
-		OlReliable = new Climber(GEARBOX, PISTON, FORWARD, REVERSE, xBox);
+		OlReliable = new Climber(GEARBOX, PISTON, NUM_JOYSTICKS);
+
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
 		frc::SmartDashboard::PutData("Auto Modes", &chooser);
