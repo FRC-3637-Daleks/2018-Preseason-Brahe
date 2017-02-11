@@ -10,12 +10,15 @@
 #include <WPILib.h>
 #include <CANTalon.h>
 #include <Brahe.h>
-
+#include <Climber.h>
+#include <JoyStick.h>
 class Robot: public frc::IterativeRobot
 {
 public:
 	CANTalon *leftMotor, *rightMotor;
 	Joystick *leftJoystick, *rightJoystick;
+	Climber *OlReliable;
+	XboxController *xBox;
 
 	void
 	RobotInit()
@@ -25,7 +28,9 @@ public:
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
+		xBox = new XboxController(NUM_JOYSTICKS);
 
+		OlReliable = new Climber(GEARBOX, PISTON, FORWARD, REVERSE, xBox);
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
 		frc::SmartDashboard::PutData("Auto Modes", &chooser);
@@ -62,6 +67,7 @@ public:
 
 	void TeleopPeriodic()
 	{
+
 		double y1, y2;
 
 		y1 = leftJoystick->GetY();
@@ -69,6 +75,9 @@ public:
 
 		leftMotor->Set(y1);
 		rightMotor->Set(y2);
+		OlReliable->Play();
+
+
 	}
 
 	void TestPeriodic()
