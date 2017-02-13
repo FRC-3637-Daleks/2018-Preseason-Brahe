@@ -23,6 +23,7 @@ Claw::Claw(int piston, int pivot, int arm, int gearSwitch, int pegSwitch)
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = true;
+	InitClaw();
 	return;
 }
 
@@ -35,6 +36,7 @@ Claw::Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = false;
+	InitClaw();
 	return;
 }
 
@@ -47,6 +49,7 @@ Claw::Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = false;
+	InitClaw();
 	return;
 }
 
@@ -62,25 +65,25 @@ Claw::~Claw()
 }
 
 void
-Claw::OpenPiston()
+Claw::ExtendPiston()
 {
 	m_piston->Set(true);
 }
 
 void
-Claw::ClosePiston()
+Claw::RetractPiston()
 {
 	m_piston->Set(false);
 }
 
 void
-Claw::OpenPivot()
+Claw::ExtendPivot()
 {
 	m_pivot->Set(false);
 }
 
 void
-Claw::ClosePivot()
+Claw::RetractPivot()
 {
 	m_pivot->Set(true);
 }
@@ -98,15 +101,32 @@ Claw::CloseClaw()
 }
 
 bool
-Claw::IsGearPresent()
+Claw::GearPresent()
 {
 	return (m_gearSwitch->Get() == 1);
 }
 
 bool
-Claw::IsPegPresent()
+Claw::PegPresent()
 {
 	return (m_pegSwitch->Get() == 1);
 }
 
-
+void
+Claw::OpenDoors()
+{
+	if(PegPresent()) {
+		CloseClaw();
+		RetractPivot();
+		ExtendPiston();
+	}
+}
+void
+Claw::InitClaw()
+{
+	// assert(IsGearPresent() == true);
+	// assert(IsPegPresent() == false);
+	OpenClaw();
+	RetractPivot();
+	RetractPiston();
+}

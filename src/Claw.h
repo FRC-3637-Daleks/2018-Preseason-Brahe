@@ -22,17 +22,19 @@ public:
 			int gearSwitch, int pegSwitch);
 	Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
 			int gearSwtich, int pegSwitch);
-	void OpenPiston();
-	void ClosePiston();
+	void ExtendPiston();
+	void RetractPiston();
 	void OpenClaw();
 	void CloseClaw();
-	void OpenPivot();
-	void ClosePivot();
-	bool IsGearPresent();
-	bool IsPegPresent();
+	void ExtendPivot();
+	void RetractPivot();
+	bool GearPresent();
+	bool PegPresent();
+	void OpenDoors();
 	~Claw();
 
 private:
+	void InitClaw();
 	Solenoid *m_piston;
 	Solenoid *m_pivot;
 	Solenoid *m_arm;
