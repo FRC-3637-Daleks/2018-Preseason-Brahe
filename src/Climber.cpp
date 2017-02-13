@@ -34,19 +34,20 @@ public:
 		Climb -> Set(0);
 	}
 	void Play(){
-		if (xbox->GetYButton()){
-			//Up(5);
-			//midair = true;
-		}
-		if (xbox->GetBumper(GenericHID::JoystickHand::kRightHand) && !midair){
+		/*if (xbox->GetYButton()){
+			Up(5);
+			midair = true;
+		}*/
+		if (xbox->GetBumper(GenericHID::JoystickHand::kLeftHand) && !midair){
 			void Switch();
 		}
-		if(xbox->GetY(GenericHID::JoystickHand::kRightHand) != 0 && Piston->Get()){
-			Up(xbox->GetY(GenericHID::JoystickHand::kRightHand));
+		if(Piston->Get()){
+			Up(xbox->GetY(GenericHID::JoystickHand::kLeftHand));
 		}
-		if(xbox->GetAButton()){
+		else{
 			Stop();
 		}
+
 	}
 };
 
