@@ -7,33 +7,34 @@
 #include <CANTalon.h>
 #include <Solenoid.h>
 #include <WPILib.h>
+#include <Climber.h>
 
-class Climber{
-private:
+
 	CANTalon *Climb;
 	Solenoid *Piston;
 	XboxController *xbox;
 	bool midair;
 
-public:
-	Climber(int c, int p, int xb){
+
+
+	Climber::Climber(int c, int p, int xb){
 		xbox = new XboxController(xb);
 		Climb = new CANTalon(c);
 		Piston = new Solenoid(p);
 		Piston->Set(false);
 		midair = false;
 	}
-	void Switch(){
+	void Climber::Switch(){
 		Piston->Set(!Piston->Get());
 
 	}
-	void Up(double speed){
+	void Climber::Up(double speed){
 		Climb -> Set(speed);
 	}
-	void Stop(){
+	void Climber::Stop(){
 		Climb -> Set(0);
 	}
-	void Play(){
+	void Climber::Play(){
 		/*if (xbox->GetYButton()){
 			Up(5);
 			midair = true;
@@ -49,7 +50,7 @@ public:
 		}
 
 	}
-};
+
 
 
 
