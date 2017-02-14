@@ -79,25 +79,25 @@ Claw::RetractPiston()
 void
 Claw::ExtendPivot()
 {
-	m_pivot->Set(false);
+	m_pivot->Set(true);
 }
 
 void
 Claw::RetractPivot()
 {
-	m_pivot->Set(true);
+	m_pivot->Set(false);
 }
 
 void
 Claw::OpenClaw()
 {
-	m_arm->Set(true);
+	m_arm->Set(false);
 }
 
 void
 Claw::CloseClaw()
 {
-	m_arm->Set(false);
+	m_arm->Set(true);
 }
 
 bool
@@ -121,6 +121,7 @@ Claw::OpenDoors()
 		ExtendPiston();
 	}
 }
+
 void
 Claw::InitClaw()
 {

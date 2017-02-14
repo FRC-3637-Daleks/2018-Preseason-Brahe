@@ -31,10 +31,11 @@ public:
 	bool GearPresent();
 	bool PegPresent();
 	void OpenDoors();
+	void InitClaw();
 	~Claw();
 
 private:
-	void InitClaw();
+
 	Solenoid *m_piston;
 	Solenoid *m_pivot;
 	Solenoid *m_arm;

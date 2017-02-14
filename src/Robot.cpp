@@ -72,6 +72,7 @@ public:
 	{
 		autoSelected = chooser.GetSelected();
 		c->Start();
+		claw->InitClaw();
 	}
 
 	void TeleopPeriodic()
@@ -89,6 +90,15 @@ public:
 			d->ShiftGear(LOW_GEAR);
 		if(rightJoystick->GetTrigger())
 			d->ShiftGear(HIGH_GEAR);
+
+		if(xbox->GetAButton())
+			claw->OpenDoors();
+		if(xbox->GetBButton())
+			claw->InitClaw();
+		if(xbox->GetXButton())
+			claw->ExtendPiston();
+		if(xbox->GetYButton())
+			claw->RetractPiston();
 
 		DashboardUpdates();
 	}
