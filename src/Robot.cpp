@@ -91,7 +91,10 @@ public:
 
             x = leftJoystick->GetX();
             y = leftJoystick->GetY();
-            angle = math::atan2(y, x);
+            if((x == 0.0) && (y==0.0))
+                curve = 0.0;
+            else
+                curve = math::atan2(y, x);
             d->Drive(outputMagnitude, curve);
         }
 		else
