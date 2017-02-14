@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <math>
 
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
@@ -77,14 +78,24 @@ public:
 
 	void TeleopPeriodic()
 	{
-		bool useArcade;
+		bool useArcade, useDrive;
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
+        useDrive  = (rightJoystick->GetZ() == -1.0);
 
-		if (!useArcade)
-			d->TankDrive(leftJoystick, rightJoystick);
-		else
+		if (useArcade)
 			d->ArcadeDrive(leftJoystick);
+        else if (useDrive) {
+            double outputMagnitude = rightJoystick->GetY();
+            double curve, x, y;
+
+            x = leftJoystick->GetX();
+            y = leftJoystick->GetY();
+            angle = math::atan2(y, x);
+            d->Drive(outputMagnitude, curve);
+        }
+		else
+			d->TankDrive(leftJoystick, rightJoystick);
 
 		if(leftJoystick->GetTrigger())
 			d->ShiftGear(LOW_GEAR);
