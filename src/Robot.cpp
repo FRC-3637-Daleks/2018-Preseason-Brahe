@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <math>
+#include <math.h>
 
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
@@ -94,7 +94,7 @@ public:
             if((x == 0.0) && (y==0.0))
                 curve = 0.0;
             else
-                curve = math::atan2(y, x);
+                curve = atan2(y, x);
             d->Drive(outputMagnitude, curve);
         }
 		else
