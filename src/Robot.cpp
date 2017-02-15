@@ -12,6 +12,10 @@
 #include <Brahe.h>
 #include <Climber.h>
 #include <JoyStick.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <GripPipeline.cpp>
+#include <GripPipeline.h>
 class Robot: public frc::IterativeRobot
 {
 public:
@@ -19,7 +23,7 @@ public:
 	Joystick *leftJoystick, *rightJoystick;
 	Climber *OlReliable;
 	XboxController *xBox;
-	void
+
 	/*static void VisionThread()
 	{
 	        cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
@@ -29,10 +33,12 @@ public:
 	        cv::Mat source;
 	        cv::Mat output;
 	        while(true) {
-	            cvSink.GrabFrame(source);
-	            cvtColor(source, output, cv::COLOR_BGR2GRAY);
-	            outputStreamStd.PutFrame(output);
-	        }*/
+	        	cvSink.GrabFrame(source);
+	        	cvtColor(source, output, cv::COLOR_BGR2GRAY);
+	        	outputStreamStd.PutFrame(output);
+	        }
+	}*/
+	void
 	RobotInit()
 	{
 
@@ -81,13 +87,41 @@ public:
 	void TeleopPeriodic()
 	{
 
-		double y1, y2;
+		double x, y;
 
-		y1 = leftJoystick->GetY();
-		y2 = rightJoystick->GetY();
+		x = leftJoystick->GetX();
+		y = rightJoystick->GetY();
 
-		leftMotor->Set(y1);
-		rightMotor->Set(y2);
+		leftMotor->Set(y);
+		rightMotor->Set(y);
+		if (y < (1-x/2) && y > (-1+x/2)){
+			leftMotor->Set((leftMotor->Get() + x/2));
+			rightMotor->Set((rightMotor->Get() - x/2));
+		}
+		else{
+			if(x>0){
+				if(y>0){
+					rightMotor->Set(rightMotor->Get()-1+leftMotor->Get());
+					leftMotor->Set(1);
+
+				}
+				else{
+					rightMotor->Set(rightMotor->Get()+1+leftMotor->Get());
+					leftMotor->Set(-1);
+				}
+			}
+			else{
+				if(y>0){
+					leftMotor->Set(leftMotor->Get()-1+rightMotor->Get());
+					rightMotor->Set(1);
+				}
+				else{
+					leftMotor->Set(leftMotor->Get()+1+rightMotor->Get());
+					rightMotor->Set(-1);
+				}
+			}
+		}
+
 		OlReliable->Play();
 
 
