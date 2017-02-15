@@ -30,7 +30,11 @@ public:
 	void RetractPivot();
 	bool GearPresent();
 	bool PegPresent();
-	void OpenDoors();
+	void PegPlacementMode();
+	void GroundMode();
+	void TravelMode();
+	bool IsOpen();
+	bool IsClosed();
 	void InitClaw();
 	~Claw();
 

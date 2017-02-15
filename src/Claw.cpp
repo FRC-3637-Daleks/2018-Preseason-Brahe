@@ -101,6 +101,18 @@ Claw::CloseClaw()
 }
 
 bool
+Claw::IsOpen()
+{
+	return (m_arm->Get() == false);
+}
+
+bool
+Claw::IsClosed()
+{
+	return (m_arm->Get() == true);
+}
+
+bool
 Claw::GearPresent()
 {
 	return (m_gearSwitch->Get() == 1);
@@ -113,13 +125,29 @@ Claw::PegPresent()
 }
 
 void
-Claw::OpenDoors()
+Claw::PegPlacementMode()
 {
-	if(PegPresent()) {
+//	if(PegPresent()) {
 		CloseClaw();
 		RetractPivot();
 		ExtendPiston();
-	}
+//	}
+}
+
+void
+Claw::GroundMode()
+{
+	OpenClaw();
+	ExtendPivot();
+	ExtendPiston();
+}
+
+void
+Claw::TravelMode()
+{
+	CloseClaw();
+	RetractPivot();
+	RetractPiston();
 }
 
 void

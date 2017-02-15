@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+
 #include <math.h>
 
 #include <IterativeRobot.h>
@@ -13,17 +14,38 @@
 #include <Brahe.h>
 #include <DalekDrive.h>
 #include <Claw.h>
+#include <Climber.h>
 
 class Robot: public frc::IterativeRobot
 {
 public:
 	Compressor *c;
 	CANTalon *leftMotor, *rightMotor, *leftSlave, *rightSlave;
+	CANTalon *climbMotor;
 	Joystick *leftJoystick, *rightJoystick;
 	XboxController *xbox;
 	DalekDrive *d;
 	Claw *claw;
+	Climber *climb;
+	Solenoid *climbPiston;
 
+#ifdef OMIT
+	static 
+	void VisionThread()
+	{
+	        cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
+	        camera.SetResolution(640, 480);
+	        cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+	        cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo("Gray", 640, 480);
+	        cv::Mat source;
+	        cv::Mat output;
+	        while(true) {
+	            cvSink.GrabFrame(source);
+	            cvtColor(source, output, cv::COLOR_BGR2GRAY);
+	            outputStreamStd.PutFrame(output);
+	        }
+	}
+#endif
 	void
 	RobotInit()
 	{
@@ -31,15 +53,17 @@ public:
 		leftSlave  = new CANTalon(LEFT_SLAVEMOTOR);
 		rightMotor = new CANTalon(RIGHT_DRIVEMOTOR);
 		rightSlave = new CANTalon(RIGHT_SLAVEMOTOR);
+		climbMotor = new CANTalon(CLIMB_MOTOR);
+		climbPiston = new Solenoid(PCM_ID, CLIMB);
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
 
-		// CameraServer::GetInstance()->StartAutomaticCapture();
 		c = new Compressor(PCM_ID);
 		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
 		claw = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH, PEG_SWITCH);
+		climb = new Climber(climbMotor, climbPiston);
 
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
@@ -81,22 +105,22 @@ public:
 		bool useArcade, useDrive;
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
-        useDrive  = (rightJoystick->GetZ() == -1.0);
+		useDrive  = (rightJoystick->GetZ() == -1.0);
 
 		if (useArcade)
 			d->ArcadeDrive(leftJoystick);
-        else if (useDrive) {
-            double outputMagnitude = rightJoystick->GetY();
-            double curve, x, y;
+		else if (useDrive) {
+			double outputMagnitude = rightJoystick->GetY();
+			double curve, x, y;
 
-            x = leftJoystick->GetX();
-            y = leftJoystick->GetY();
-            if((x == 0.0) && (y==0.0))
-                curve = 0.0;
-            else
-                curve = atan2(y, x);
-            d->Drive(outputMagnitude, curve);
-        }
+			x = leftJoystick->GetX();
+			y = leftJoystick->GetY();
+			if((x == 0.0) && (y==0.0))
+				curve = 0.0;
+			else
+				curve = atan2(y, x);
+			d->Drive(outputMagnitude, curve);
+		}
 		else
 			d->TankDrive(leftJoystick, rightJoystick);
 
@@ -106,13 +130,17 @@ public:
 			d->ShiftGear(HIGH_GEAR);
 
 		if(xbox->GetAButton())
-			claw->OpenDoors();
+			claw->PegPlacementMode();
 		if(xbox->GetBButton())
-			claw->InitClaw();
+			claw->GroundMode();
 		if(xbox->GetXButton())
-			claw->ExtendPiston();
-		if(xbox->GetYButton())
-			claw->RetractPiston();
+			claw->TravelMode();
+		if(xbox->GetYButton()) {
+			if(claw->IsOpen())
+				claw->OpenClaw();
+			else
+				claw->CloseClaw();
+		}
 
 		DashboardUpdates();
 	}
@@ -128,6 +156,7 @@ public:
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
 
 	}
+
 private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> chooser;

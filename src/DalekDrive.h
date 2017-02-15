@@ -20,7 +20,7 @@
  */
 class DalekDrive {
   public:
-	typedef enum DriveMotors MotorType_t;
+	typedef enum Motors MotorType_t;
 	typedef enum Gears GearType_t;
 
 	DalekDrive(int leftMotorChannel, int rightMotorChannel);
