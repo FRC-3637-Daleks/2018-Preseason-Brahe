@@ -164,6 +164,7 @@ public:
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
 		frc::SmartDashboard::PutBoolean("Peg Switch", claw->PegPresent());
 		frc::SmartDashboard::PutBoolean("Gear Switch", claw->GearPresent());
+		frc::SmartDashboard::PutBoolean("Drum Switch", climb->IsIndexed());
 	}
 
 private:
