@@ -11,20 +11,21 @@
 class Climber
 {
     public:
-		Climber(int climbMotor, int piston);
-		Climber(CANTalon *climbMotor, Solenoid *piston);
-		Climber(CANTalon &climbMotor, Solenoid &piston);
+		Climber(int climbMotor, int piston, int magswitch);
+		Climber(CANTalon *climbMotor, Solenoid *piston, int magswitch);
+		Climber(CANTalon &climbMotor, Solenoid &piston, int magswitch);
 		~Climber();
-		void SwitchOn();
-		void SwitchOff();
-		void Up(double speed);
+		void GrabRope();
+		void ReleaseRope();
+		void ClimbRope(double speed);
+		bool IsIndexed();
+		void MoveToIndex();
 		void Stop();
-		void Play();
-
 
     private:
 		CANTalon *m_climb;
 		Solenoid *m_piston;
+		DigitalInput *m_index;
 		bool m_needFree;
 };
 

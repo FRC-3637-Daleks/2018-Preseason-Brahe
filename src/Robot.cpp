@@ -63,7 +63,7 @@ public:
 		c = new Compressor(PCM_ID);
 		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
 		claw = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH, PEG_SWITCH);
-		climb = new Climber(climbMotor, climbPiston);
+		climb = new Climber(climbMotor, climbPiston, DRUM_SWITCH);
 
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
@@ -139,14 +139,14 @@ public:
 				claw->CloseClaw();
 		}
 		// Climber controls
-		climbvalue = xbox->GetY(frc::GenericHID::JoystickHand::kLeftHand);
+		climbvalue = fabs(xbox->GetY(frc::GenericHID::JoystickHand::kLeftHand));
 		if(xbox->GetStartButton())
-			climb->SwitchOn();
+			climb->GrabRope();
 		if(xbox->GetBackButton())
-			climb->SwitchOff();
+			climb->ReleaseRope();
 
-		if((climbvalue > 0.1) || (climbvalue < -0.1))
-			climb->Up(climbvalue);
+		if(climbvalue > 0.1)
+			climb->ClimbRope(climbvalue);
 		else
 			climb->Stop();
 
