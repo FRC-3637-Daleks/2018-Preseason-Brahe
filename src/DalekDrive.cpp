@@ -264,7 +264,7 @@ DalekDrive::ShiftGear(GearType_t speed)
 }
 
 void
-DalekDrive::sendFaults(MotorType_t p, int faults)
+DalekDrive::printFaults(MotorType_t p, int faults)
 {
 	if(p == LEFT_DRIVEMOTOR) {
 		frc::SmartDashboard::PutNumber("Left Talon reported faults", faults);
@@ -312,24 +312,24 @@ DalekDrive::DriveOk()
 	// check for motor faults
 	mstat = m_leftMotor->GetFaults();
 	if(mstat != 0) {
-		sendFaults(LEFT_DRIVEMOTOR, mstat);
+		printFaults(LEFT_DRIVEMOTOR, mstat);
 		return false;
 	}
 	mstat = m_leftMotor->GetStickyFaults();
 	if(mstat) {
-		sendFaults(LEFT_DRIVEMOTOR, mstat);
+		printFaults(LEFT_DRIVEMOTOR, mstat);
 		m_leftMotor->ClearStickyFaults();
 		return false;
 	}
 
 	mstat = m_rightMotor->GetFaults();
 	if(mstat) {
-		sendFaults(RIGHT_DRIVEMOTOR, mstat);
+		printFaults(RIGHT_DRIVEMOTOR, mstat);
 		return false;
 	}
 	mstat = m_rightMotor->GetStickyFaults();
 	if(mstat) {
-		sendFaults(RIGHT_DRIVEMOTOR, mstat);
+		printFaults(RIGHT_DRIVEMOTOR, mstat);
 		return false;
 	}
 	return true;

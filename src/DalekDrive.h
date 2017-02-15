@@ -57,7 +57,7 @@ class DalekDrive {
 
  protected:
 	void InitDalekDrive();
-	void sendFaults(MotorType_t drive, int faults);
+	void printFaults(MotorType_t drive, int faults);
 	CANTalon *m_leftMotor;
 	CANTalon *m_rightMotor;
 	CANTalon *m_leftSlaveMotor;

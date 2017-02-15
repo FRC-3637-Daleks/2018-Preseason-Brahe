@@ -14,12 +14,13 @@ class Climber
 		Climber(int climbMotor, int piston);
 		Climber(CANTalon *climbMotor, Solenoid *piston);
 		Climber(CANTalon &climbMotor, Solenoid &piston);
+		~Climber();
 		void SwitchOn();
 		void SwitchOff();
 		void Up(double speed);
 		void Stop();
 		void Play();
-		~Climber();
+
 
     private:
 		CANTalon *m_climb;

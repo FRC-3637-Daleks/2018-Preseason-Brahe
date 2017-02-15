@@ -97,28 +97,24 @@ public:
 	{
 		autoSelected = chooser.GetSelected();
 		c->Start();
-		claw->InitClaw();
+		claw->TravelMode();
 	}
 
 	void TeleopPeriodic()
 	{
 		bool useArcade, useDrive;
+		double climbvalue;
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
 		useDrive  = (rightJoystick->GetZ() == -1.0);
 
+		// Drive controls
 		if (useArcade)
 			d->ArcadeDrive(leftJoystick);
 		else if (useDrive) {
 			double outputMagnitude = rightJoystick->GetY();
-			double curve, x, y;
+			double curve = leftJoystick->GetX();
 
-			x = leftJoystick->GetX();
-			y = leftJoystick->GetY();
-			if((x == 0.0) && (y==0.0))
-				curve = 0.0;
-			else
-				curve = atan2(y, x);
 			d->Drive(outputMagnitude, curve);
 		}
 		else
@@ -129,6 +125,7 @@ public:
 		if(rightJoystick->GetTrigger())
 			d->ShiftGear(HIGH_GEAR);
 
+		// Gear controls
 		if(xbox->GetAButton())
 			claw->PegPlacementMode();
 		if(xbox->GetBButton())
@@ -141,6 +138,17 @@ public:
 			else
 				claw->CloseClaw();
 		}
+		// Climber controls
+		climbvalue = xbox->GetY(frc::GenericHID::JoystickHand::kLeftHand);
+		if(xbox->GetStartButton())
+			climb->SwitchOn();
+		if(xbox->GetBackButton())
+			climb->SwitchOff();
+
+		if((climbvalue > 0.1) || (climbvalue < -0.1))
+			climb->Up(climbvalue);
+		else
+			climb->Stop();
 
 		DashboardUpdates();
 	}
@@ -154,7 +162,8 @@ public:
 	{
 		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
-
+		frc::SmartDashboard::PutBoolean("Peg Switch", claw->PegPresent());
+		frc::SmartDashboard::PutBoolean("Gear Switch", claw->GearPresent());
 	}
 
 private:

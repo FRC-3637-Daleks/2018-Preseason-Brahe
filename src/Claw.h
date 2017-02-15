@@ -35,7 +35,6 @@ public:
 	void TravelMode();
 	bool IsOpen();
 	bool IsClosed();
-	void InitClaw();
 	~Claw();
 
 private:

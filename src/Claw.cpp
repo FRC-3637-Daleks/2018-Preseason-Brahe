@@ -23,7 +23,7 @@ Claw::Claw(int piston, int pivot, int arm, int gearSwitch, int pegSwitch)
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = true;
-	InitClaw();
+	TravelMode();
 	return;
 }
 
@@ -36,7 +36,7 @@ Claw::Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = false;
-	InitClaw();
+	TravelMode();
 	return;
 }
 
@@ -49,7 +49,7 @@ Claw::Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = false;
-	InitClaw();
+	TravelMode();
 	return;
 }
 
@@ -115,13 +115,13 @@ Claw::IsClosed()
 bool
 Claw::GearPresent()
 {
-	return (m_gearSwitch->Get() == 1);
+	return (m_gearSwitch->Get() == 0);
 }
 
 bool
 Claw::PegPresent()
 {
-	return (m_pegSwitch->Get() == 1);
+	return (m_pegSwitch->Get() == 0);
 }
 
 void
@@ -150,12 +150,3 @@ Claw::TravelMode()
 	RetractPiston();
 }
 
-void
-Claw::InitClaw()
-{
-	// assert(IsGearPresent() == true);
-	// assert(IsPegPresent() == false);
-	OpenClaw();
-	RetractPivot();
-	RetractPiston();
-}
