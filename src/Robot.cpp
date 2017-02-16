@@ -113,9 +113,28 @@ public:
 			d->ArcadeDrive(leftJoystick);
 		else if (useDrive) {
 			double outputMagnitude = rightJoystick->GetY();
-			double curve = leftJoystick->GetX();
-
-			d->Drive(outputMagnitude, curve);
+			double curve = leftJoystick->GetX() / 2;
+				if (outputMagnitude + curve <= 1 && outputMagnitude - curve >= -1){
+					d->TankDrive(outputMagnitude + curve, outputMagnitude - curve);
+				}
+				else{
+					if (outputMagnitude > 0){
+						if(curve > 0){
+							d->TankDrive(1, outputMagnitude - 1 + outputMagnitude);
+						}
+						else{
+							d->TankDrive(outputMagnitude -1 + outputMagnitude, 1);
+						}
+					}
+					else{
+						if(curve > 0){
+							d->TankDrive(-1, outputMagnitude + 1 + outputMagnitude);
+						}
+						else{
+							d->TankDrive(outputMagnitude + 1 + outputMagnitude, -1);
+						}
+					}
+				}
 		}
 		else
 			d->TankDrive(leftJoystick, rightJoystick);
