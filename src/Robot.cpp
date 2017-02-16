@@ -102,7 +102,8 @@ public:
 
 	void TeleopPeriodic()
 	{
-		bool useArcade, useDrive;
+        static bool sawButtonRelease = true;
+		bool useArcade, useDrive, toggleClaw;
 		double climbvalue;
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
@@ -132,12 +133,18 @@ public:
 			claw->GroundMode();
 		if(xbox->GetXButton())
 			claw->TravelMode();
-		if(xbox->GetYButton()) {
+
+        toggleClaw = xbox->GetYButton();
+		if(sawButtonRelease && toggleClaw) {
 			if(claw->IsOpen())
-				claw->OpenClaw();
-			else
 				claw->CloseClaw();
+			else
+				claw->OpenClaw();
+            sawButtonRelease = false;
 		}
+        else if (!toggleClaw)
+            sawButtonRelease = true;
+
 		// Climber controls
 		climbvalue = fabs(xbox->GetY(frc::GenericHID::JoystickHand::kLeftHand));
 		if(xbox->GetStartButton())
