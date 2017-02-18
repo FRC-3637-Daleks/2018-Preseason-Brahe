@@ -137,9 +137,11 @@ Claw::PegPlacementMode()
 void
 Claw::GroundMode()
 {
-	OpenClaw();
+
 	ExtendPivot();
 	ExtendPiston();
+
+
 }
 
 void
