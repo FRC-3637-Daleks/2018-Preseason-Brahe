@@ -56,39 +56,23 @@ public:
 		claw = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH, PEG_SWITCH);
 		climb = new Climber(climbMotor, climbPiston, DRUM_SWITCH);
 
-
-		chooser.AddDefault(autoNameDefault, autoNameDefault);
-		chooser.AddObject(autoNameCustom, autoNameCustom);
-		frc::SmartDashboard::PutData("Auto Modes", &chooser);
 	}
 
 	void
 	AutonomousInit() override
 	{
-		autoSelected = chooser.GetSelected();
-		std::cout << "Auto selected: " << autoSelected << std::endl;
 		c->Start();
-		if (autoSelected == autoNameCustom) {
-			// Custom Auto goes here
-		} else {
-			// Default Auto goes here
-		}
+		claw->TravelMode();
 	}
 
 	void
 	AutonomousPeriodic()
 	{
-		if (autoSelected == autoNameCustom) {
-			// Custom Auto goes here
-		} else {
-			// Default Auto goes here
-		}
 	}
 
 	void
 	TeleopInit()
 	{
-		autoSelected = chooser.GetSelected();
 		c->Start();
 		claw->TravelMode();
 	}

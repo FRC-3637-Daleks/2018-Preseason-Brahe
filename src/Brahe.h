@@ -36,4 +36,6 @@ enum Gears       { LOW_GEAR, HIGH_GEAR, NUM_GEARS };
 #define LOW_GEAR_RATIO (17.0/25.9)
 #define HIGH_GEAR_RATIO (17.0/6.96)
 
+// #define CAMERA_INUSE
+
 #endif /* SRC_BRAHE_H_ */
