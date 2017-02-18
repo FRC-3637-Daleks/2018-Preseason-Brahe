@@ -19,6 +19,7 @@
 class Robot: public frc::IterativeRobot
 {
 public:
+	int camnum = 0;
 	Compressor *c;
 	CANTalon *leftMotor, *rightMotor, *leftSlave, *rightSlave;
 	CANTalon *climbMotor;
@@ -29,23 +30,7 @@ public:
 	Climber *climb;
 	Solenoid *climbPiston;
 
-#ifdef OMIT
-	static 
-	void VisionThread()
-	{
-	        cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
-	        camera.SetResolution(640, 480);
-	        cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
-	        cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo("Gray", 640, 480);
-	        cv::Mat source;
-	        cv::Mat output;
-	        while(true) {
-	            cvSink.GrabFrame(source);
-	            cvtColor(source, output, cv::COLOR_BGR2GRAY);
-	            outputStreamStd.PutFrame(output);
-	        }
-	}
-#endif
+
 	void
 	RobotInit()
 	{
@@ -55,15 +40,22 @@ public:
 		rightSlave = new CANTalon(RIGHT_SLAVEMOTOR);
 		climbMotor = new CANTalon(CLIMB_MOTOR);
 		climbPiston = new Solenoid(PCM_ID, CLIMB);
+		CameraServer::GetInstance()->StartAutomaticCapture();
+		CameraServer::GetInstance()->StartAutomaticCapture();
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
+#ifdef CAMERA_INUSE
+		std::thread visionThread(VisionThread);
+		visionThread.detach();
+#endif
 
 		c = new Compressor(PCM_ID);
 		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
 		claw = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH, PEG_SWITCH);
 		climb = new Climber(climbMotor, climbPiston, DRUM_SWITCH);
+
 
 		chooser.AddDefault(autoNameDefault, autoNameDefault);
 		chooser.AddObject(autoNameCustom, autoNameCustom);
@@ -93,16 +85,18 @@ public:
 		}
 	}
 
-	void TeleopInit()
+	void
+	TeleopInit()
 	{
 		autoSelected = chooser.GetSelected();
 		c->Start();
 		claw->TravelMode();
 	}
 
-	void TeleopPeriodic()
+	void
+	TeleopPeriodic()
 	{
-        static bool sawButtonRelease = true;
+		static bool sawButtonRelease = true;
 		bool useArcade, useDrive, toggleClaw;
 		double climbvalue;
 
@@ -114,9 +108,24 @@ public:
 			d->ArcadeDrive(leftJoystick);
 		else if (useDrive) {
 			double outputMagnitude = rightJoystick->GetY();
-			double curve = leftJoystick->GetX();
+			double curve = -leftJoystick->GetX() / 2;
 
-			d->Drive(outputMagnitude, curve);
+			if (outputMagnitude + curve <= 1 && outputMagnitude - curve >= -1)
+				d->TankDrive(outputMagnitude + curve, outputMagnitude - curve);
+			else {
+				if (outputMagnitude > 0) {
+					if (curve > 0)
+						d->TankDrive(1, outputMagnitude - 1 + outputMagnitude);
+					else
+						d->TankDrive(outputMagnitude -1 + outputMagnitude, 1);
+				}
+				else {
+					if (curve > 0)
+						d->TankDrive(-1, outputMagnitude + 1 + outputMagnitude);
+					else
+						d->TankDrive(outputMagnitude + 1 + outputMagnitude, -1);
+				}
+			}
 		}
 		else
 			d->TankDrive(leftJoystick, rightJoystick);
@@ -134,16 +143,16 @@ public:
 		if(xbox->GetXButton())
 			claw->TravelMode();
 
-        toggleClaw = xbox->GetYButton();
+		toggleClaw = xbox->GetYButton();
 		if(sawButtonRelease && toggleClaw) {
 			if(claw->IsOpen())
 				claw->CloseClaw();
 			else
 				claw->OpenClaw();
-            sawButtonRelease = false;
+			sawButtonRelease = false;
 		}
-        else if (!toggleClaw)
-            sawButtonRelease = true;
+		else if (!toggleClaw)
+			sawButtonRelease = true;
 
 		// Climber controls
 		climbvalue = fabs(xbox->GetY(frc::GenericHID::JoystickHand::kLeftHand));
@@ -152,34 +161,69 @@ public:
 		if(xbox->GetBackButton())
 			climb->ReleaseRope();
 
-		if(climbvalue > 0.1)
+		if(climbvalue > 0.3)
 			climb->ClimbRope(climbvalue);
 		else
 			climb->Stop();
 
+		// Camera controls
+		if (xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand))
+			camnum = 0;
+		
+		if (xbox->GetBumper(frc::GenericHID::JoystickHand::kLeftHand))
+			camnum = 1;
+
 		DashboardUpdates();
 	}
 
-	void TestPeriodic()
+	void
+	TestPeriodic()
 	{
 		lw->Run();
 	}
 
-	void DashboardUpdates()
+	void
+	DashboardUpdates()
 	{
 		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
 		frc::SmartDashboard::PutBoolean("Peg Switch", claw->PegPresent());
 		frc::SmartDashboard::PutBoolean("Gear Switch", claw->GearPresent());
 		frc::SmartDashboard::PutBoolean("Drum Switch", climb->IsIndexed());
+		frc::SmartDashboard::PutBoolean("Claw Open????", claw->IsOpen());
 	}
 
 private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
-	frc::SendableChooser<std::string> chooser;
-	const std::string autoNameDefault = "Default";
-	const std::string autoNameCustom = "My Auto Mode";
-	std::string autoSelected;
+
+#ifdef CAMERA_INUSE
+	static void 
+	VisionThread()
+	{
+		cv::Mat source;
+		cv::Mat output;
+
+		cs::UsbCamera GearCam = CameraServer::GetInstance()->StartAutomaticCapture("gearcam",   0);
+		cs::UsbCamera ClimbCam = CameraServer::GetInstance()->StartAutomaticCapture("climbcam", 1);
+
+		GearCam.SetResolution(640, 480);
+		ClimbCam.SetResolution(640, 480);
+
+		cs::CvSink gearSink = CameraServer::GetInstance()->GetVideo("gearcam");
+		cs::CvSink climbSink = CameraServer::GetInstance()->GetVideo("climbcam");
+		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo("Output", 640, 480);
+
+		while(true) {
+        		if (camnum == 0)
+				gearSink.GrabFrame(source);
+			else
+        			climbSink.GrabFrame(source);
+
+        		outputStreamStd.PutFrame(source);
+        	}
+	}
+#endif
+
 };
 
 START_ROBOT_CLASS(Robot)
