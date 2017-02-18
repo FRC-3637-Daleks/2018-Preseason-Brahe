@@ -1,5 +1,5 @@
 /*
- * DalekDrive.h
+ * Claw.cpp
  *
  *  Created on: Feb 10, 2017
  *      Author: Michael
@@ -137,10 +137,8 @@ Claw::PegPlacementMode()
 void
 Claw::GroundMode()
 {
-
 	ExtendPivot();
 	ExtendPiston();
-
 
 }
 
