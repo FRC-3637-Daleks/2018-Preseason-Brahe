@@ -127,11 +127,11 @@ Claw::PegPresent()
 void
 Claw::PegPlacementMode()
 {
-//	if(PegPresent()) {
+	if(PegPresent()) {
 		CloseClaw();
 		RetractPivot();
 		ExtendPiston();
-//	}
+	}
 }
 
 void
@@ -139,7 +139,8 @@ Claw::GroundMode()
 {
 	ExtendPivot();
 	ExtendPiston();
-
+	Wait(0.1);
+	OpenClaw();
 }
 
 void
