@@ -30,6 +30,7 @@ enum Gears       { LOW_GEAR, HIGH_GEAR, NUM_GEARS };
 #define GEAR_SWITCH 1
 #define PEG_SWITCH  2
 #define DRUM_SWITCH 3
+#define CLIMB_SWITCH 4
 
 #define ENCODER_TICKS_PER_REV 360
 #define WHEEL_DIAMETER_INCHES 6.25
