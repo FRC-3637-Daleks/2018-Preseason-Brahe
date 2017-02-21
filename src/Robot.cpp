@@ -128,14 +128,13 @@ public:
 
 		// Gear controls
 		if(xbox->GetAButton())
-			claw->PegPlacementMode();
+			claw->DeployMode();
 		if(xbox->GetBButton())
 			claw->GroundMode();
 		if(xbox->GetXButton())
 			claw->TravelMode();
 
-		if(claw->IsOpen() && claw->GearPresent())
-			claw->CloseClaw();
+		claw->CheckForGear();
 
 		toggleClaw = xbox->GetYButton();
 		if(sawButtonRelease && toggleClaw) {

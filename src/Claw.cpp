@@ -125,12 +125,13 @@ Claw::PegPresent()
 }
 
 void
-Claw::PegPlacementMode()
+Claw::DeployMode()
 {
 	if(PegPresent()) {
 		CloseClaw();
 		RetractPivot();
 		ExtendPiston();
+		m_state = DEPLOY_MODE;
 	}
 }
 
@@ -141,6 +142,7 @@ Claw::GroundMode()
 	ExtendPiston();
 	Wait(0.1);
 	OpenClaw();
+	m_state = GROUND_MODE;
 }
 
 void
@@ -149,5 +151,13 @@ Claw::TravelMode()
 	CloseClaw();
 	RetractPivot();
 	RetractPiston();
+	m_state = TRAVEL_MODE;
 }
 
+void
+Claw::CheckForGear()
+{
+	if (m_state != DEPLOY_MODE)
+		if(GearPresent())
+			CloseClaw();
+}
