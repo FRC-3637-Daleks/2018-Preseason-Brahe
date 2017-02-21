@@ -19,7 +19,6 @@
 class Robot: public frc::IterativeRobot
 {
 public:
-	int camnum = 0;
 	Compressor *c;
 	CANTalon *leftMotor, *rightMotor, *leftSlave, *rightSlave;
 	CANTalon *climbMotor;
@@ -32,6 +31,7 @@ public:
 	cs::UsbCamera *usbCamera0, *usbCamera1;
 	cs::MjpegServer *mjpegServer0;
 	cs::CvSink *cvSink0;
+    int startPosition;
 
 	void
 	RobotInit()
@@ -65,6 +65,8 @@ public:
 	void
 	AutonomousInit()
 	{
+        // get autonomous start position
+        startPosition = 1;
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -73,7 +75,100 @@ public:
 	void
 	AutonomousPeriodic()
 	{
-	}
+        static int stage = 0;
+        static double target_acquisition_distance = 100.0;
+        static bool target_acquired = false;
+
+		frc::SmartDashboard::PutNumber("Autonomous Stage", stage);
+
+        if(stage == 0) {
+            // initial start stage - move to target aquisition point
+            // for now we will assume that we are oriented in such a
+            // way that 100" travel in a straight line is sufficient
+            // distance ahead to where if we need to we can turn to
+            // find the target
+            ldist = leftMotor->GetDistance();
+            rdist = rightMotor->GetDistance();
+            disttraveled = fmax(ldist, rdist);
+            if (disttraveled < target_acquistion_distance)
+                d->SetLeftRightMotorOutputs(0.5, 0.5);
+            else {
+                d->SetLeftRightMotorOutputs(0.0, 0.0);
+                stage = 1;
+            }
+        }
+        else if(stage == 1) {
+            double targetAngle, targetDistance;
+            // roughly 100" from starting point, now need to find
+            // the visual targets to orient the bot correctly this
+            // will depend on our starting position, left, right or
+            // center.  Center should require no change as the 
+            // target should be in view. Starting on the left will
+            // require us to turn left and similarily starting on
+            // the right will require us to turn right.  How much
+            // is a bit of a crap shoot.  If grip code is working
+            // we can run this in a polling loop
+            if(!target_acquired) {
+                // make a call to see if target found here <TBD>
+                // setting targetAngle and targetDistance
+                switch(startPosition) {
+                    case 0: // left side
+                        d->SetLeftRightMotorOutputs(0.25, -0.25);
+                        break;
+                    case 1: // center
+                        d->SetLeftRightMotorOutputs(0.25, 0.25);
+                        break;
+                    case 2: // right side
+                        d->SetLeftRightMotorOutputs(-0.25, 0.25);
+                        break;
+                    default:
+                        d->SetLeftRightMotorOutputs(0.0, 0.0);
+                        break;
+                }
+            }
+            else
+                stage = 2;
+        }
+        else if(stage == 2) {
+            double targetAngle, targetDistance;
+            // We in theory have found/aligned with the target so
+            // we can at this point trundle forward to the peg
+            // We need to keep the target centered in our field of
+            // vision, so again the grip code will be used to provide
+            // the same 2 pieces of information angle to target and
+            // distance to target
+            // make call to get target distance and angle <TBD>
+            if (targetDistance > 5) {
+                if (targetAngle > 0)
+                    // off to the right, speed should be set depending on
+                    // off center we are
+                    d->SetLeftRightMotorOutputs(-0.25, 0.25);
+                else if (targetAngle == 0)
+                    d->SetLeftRightMotorOutputs(0.25, 0.25);
+                else 
+                    // off to the right, speed should be set depending on
+                    // off center we are
+                    d->SetLeftRightMotorOutputs(0.25, -0.25);
+            }
+            else {
+                d->SetLeftRightMotorOutputs(0.0, 0.0);
+                stage = 3;
+            }
+        }
+        else if(stage == 3) {
+            // We are now at the peg or so we believe, so do the peg deployment
+            // and backup
+            claw->DeployMode();
+            Wait(0.1);
+            claw->OpenClaw();
+            Wait(0.1);
+            d->SetLeftRightMotorOutputs(-0.25, -0.25);
+            stage = 4;
+        }
+        else {
+            d->SetLeftRightMotorOutputs(0.0, 0.0);
+        }
+    }
 
 	void
 	TeleopInit()
