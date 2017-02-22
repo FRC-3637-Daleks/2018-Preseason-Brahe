@@ -28,7 +28,6 @@ enum Gears       { LOW_GEAR, HIGH_GEAR, NUM_GEARS };
 
 // Digital inputs
 #define GEAR_SWITCH 1
-#define PEG_SWITCH  2
 #define DRUM_SWITCH 3
 #define CLIMB_SWITCH 4
 

@@ -17,12 +17,9 @@
 class Claw {
 public:
 	enum PistonState { TRAVEL_MODE, DEPLOY_MODE, GROUND_MODE, NUM_POSITIONS };
-	Claw(int piston, int pivot, int arms,
-			int gearSwitch, int pegSwitch);
-	Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
-			int gearSwitch, int pegSwitch);
-	Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
-			int gearSwtich, int pegSwitch);
+	Claw(int piston, int pivot, int arms, int gearSwitch);
+	Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm, int gearSwitch);
+	Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm, int gearSwtich);
 	void ExtendPiston();
 	void RetractPiston();
 	void OpenClaw();
@@ -30,7 +27,6 @@ public:
 	void ExtendPivot();
 	void RetractPivot();
 	bool GearPresent();
-	bool PegPresent();
 	void DeployMode();
 	void GroundMode();
 	void TravelMode();

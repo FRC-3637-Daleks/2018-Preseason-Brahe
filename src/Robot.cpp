@@ -58,7 +58,7 @@ public:
 
 		c = new Compressor(PCM_ID);
 		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
-		claw  = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH, PEG_SWITCH);
+		claw  = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH);
 		climb = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
 	}
 
@@ -287,7 +287,6 @@ public:
 	{
 		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
-		frc::SmartDashboard::PutBoolean("Peg Switch", claw->PegPresent());
 		frc::SmartDashboard::PutBoolean("Gear Switch", claw->GearPresent());
 		frc::SmartDashboard::PutBoolean("Drum Switch", climb->IsIndexed());
 		frc::SmartDashboard::PutBoolean("Claw Open", claw->IsOpen());

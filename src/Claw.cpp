@@ -15,39 +15,36 @@
 
 using namespace frc;
 
-Claw::Claw(int piston, int pivot, int arm, int gearSwitch, int pegSwitch)
+Claw::Claw(int piston, int pivot, int arm, int gearSwitch)
 {
 	m_piston     = new Solenoid(PCM_ID, piston);
 	m_pivot      = new Solenoid(PCM_ID, pivot);
 	m_arm        = new Solenoid(PCM_ID, arm);
 	m_gearSwitch = new DigitalInput(gearSwitch);
-	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = true;
 	TravelMode();
 	return;
 }
 
 Claw::Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
-		int gearSwitch, int pegSwitch)
+		int gearSwitch)
 {
 	m_piston     = piston;
 	m_pivot      = pivot;
 	m_arm        = arm;
 	m_gearSwitch = new DigitalInput(gearSwitch);
-	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = false;
 	TravelMode();
 	return;
 }
 
 Claw::Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
-		int gearSwitch, int pegSwitch)
+		int gearSwitch)
 {
 	m_piston     = &piston;
 	m_pivot      = &pivot;
 	m_arm        = &arm;
 	m_gearSwitch = new DigitalInput(gearSwitch);
-	m_pegSwitch  = new DigitalInput(pegSwitch);
 	m_needFree   = false;
 	TravelMode();
 	return;
@@ -56,7 +53,6 @@ Claw::Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
 Claw::~Claw()
 {
 	delete m_gearSwitch;
-	delete m_pegSwitch;
 	if(m_needFree) {
 		delete m_piston;
 		delete m_arm;
@@ -118,21 +114,13 @@ Claw::GearPresent()
 	return (m_gearSwitch->Get() == 0);
 }
 
-bool
-Claw::PegPresent()
-{
-	return (m_pegSwitch->Get() == 0);
-}
-
 void
 Claw::DeployMode()
 {
-	if(PegPresent()) {
-		CloseClaw();
-		RetractPivot();
-		ExtendPiston();
-		m_state = DEPLOY_MODE;
-	}
+	CloseClaw();
+	RetractPivot();
+	ExtendPiston();
+	m_state = DEPLOY_MODE;
 }
 
 void
