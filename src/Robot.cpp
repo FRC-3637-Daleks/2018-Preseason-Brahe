@@ -70,6 +70,8 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
+		leftMotor->SetPosition(0);
+		rightMotor->SetPosition(0);
 	}
 
 	void
@@ -78,8 +80,14 @@ public:
         static int stage = 0;
         static double target_acquisition_distance = 100.0;
         static bool target_acquired = false;
+        double ldist, rdist, distance;
+        double targetAngle, targetDistance;
 
 		frc::SmartDashboard::PutNumber("Autonomous Stage", stage);
+        ldist = leftMotor->GetPosition();
+        rdist = rightMotor->GetPosition();
+        distance = fmax(ldist, rdist);
+        frc::SmartDashboard::PutNumber("Distance traveled", distance);
 
         if(stage == 0) {
             // initial start stage - move to target aquisition point
@@ -87,10 +95,7 @@ public:
             // way that 100" travel in a straight line is sufficient
             // distance ahead to where if we need to we can turn to
             // find the target
-            ldist = leftMotor->GetDistance();
-            rdist = rightMotor->GetDistance();
-            disttraveled = fmax(ldist, rdist);
-            if (disttraveled < target_acquistion_distance)
+            if (distance < target_acquisition_distance)
                 d->SetLeftRightMotorOutputs(0.5, 0.5);
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -98,7 +103,6 @@ public:
             }
         }
         else if(stage == 1) {
-            double targetAngle, targetDistance;
             // roughly 100" from starting point, now need to find
             // the visual targets to orient the bot correctly this
             // will depend on our starting position, left, right or
@@ -108,6 +112,7 @@ public:
             // the right will require us to turn right.  How much
             // is a bit of a crap shoot.  If grip code is working
             // we can run this in a polling loop
+            targetAngle = 0.0; targetDistance = 0.0;
             if(!target_acquired) {
                 // make a call to see if target found here <TBD>
                 // setting targetAngle and targetDistance
@@ -130,7 +135,6 @@ public:
                 stage = 2;
         }
         else if(stage == 2) {
-            double targetAngle, targetDistance;
             // We in theory have found/aligned with the target so
             // we can at this point trundle forward to the peg
             // We need to keep the target centered in our field of
@@ -138,6 +142,7 @@ public:
             // the same 2 pieces of information angle to target and
             // distance to target
             // make call to get target distance and angle <TBD>
+            targetAngle = 0.0; targetDistance = 0.0;
             if (targetDistance > 5) {
                 if (targetAngle > 0)
                     // off to the right, speed should be set depending on
@@ -277,9 +282,20 @@ public:
 	}
 
 	void
+	TestInit()
+	{
+		c->Start();
+		claw->TravelMode();
+		d->SetLeftRightMotorOutputs(0.0, 0.0);
+	}
+
+	void
 	TestPeriodic()
 	{
 		lw->Run();
+		d->DriveOk();
+		d->SetLeftRightMotorOutputs(0.0, 0.0);
+		DashboardUpdates();
 	}
 
 	void
