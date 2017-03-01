@@ -72,13 +72,14 @@ public:
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
 		leftMotor->SetPosition(0);
 		rightMotor->SetPosition(0);
+		d->ShiftGear(HIGH_GEAR);
 	}
 
 	void
 	AutonomousPeriodic()
 	{
         static int stage = 0;
-        static double target_acquisition_distance = 100.0;
+        static double target_acquisition_distance = 7300.0;
         static bool target_acquired = false;
         double ldist, rdist, distance;
         double targetAngle, targetDistance;
@@ -90,9 +91,9 @@ public:
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
 
         if(stage == 0) {
-            // initial start stage - move to target aquisition point
+            // initial start stage - move to target acquisition point
             // for now we will assume that we are oriented in such a
-            // way that 100" travel in a straight line is sufficient
+            // way that 80" travel in a straight line is sufficient
             // distance ahead to where if we need to we can turn to
             // find the target
             if (distance < target_acquisition_distance)
@@ -103,15 +104,16 @@ public:
             }
         }
         else if(stage == 1) {
-            // roughly 100" from starting point, now need to find
+            // roughly 80" from starting point, now need to find
             // the visual targets to orient the bot correctly this
             // will depend on our starting position, left, right or
             // center.  Center should require no change as the 
-            // target should be in view. Starting on the left will
-            // require us to turn left and similarily starting on
-            // the right will require us to turn right.  How much
-            // is a bit of a crap shoot.  If grip code is working
+            // target should be in view and ideally straight ahead.
+        	// Starting on the left will require us to turn left and
+        	// similarly starting on the right will require us to turn right.
+        	// How much is a bit of a crap shoot.  If grip code is working
             // we can run this in a polling loop
+        	d->ShiftGear(LOW_GEAR);
             targetAngle = 0.0; targetDistance = 0.0;
             if(!target_acquired) {
                 // make a call to see if target found here <TBD>
@@ -287,6 +289,7 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
+
 	}
 
 	void
@@ -294,7 +297,7 @@ public:
 	{
 		lw->Run();
 		d->DriveOk();
-		d->SetLeftRightMotorOutputs(0.0, 0.0);
+		d->TankDrive(leftJoystick, rightJoystick);
 		DashboardUpdates();
 	}
 
