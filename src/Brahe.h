@@ -14,8 +14,6 @@ enum Motors      { LEFT_DRIVEMOTOR = 1, LEFT_SLAVEMOTOR, RIGHT_DRIVEMOTOR, RIGHT
 enum Joysticks   { LEFT_JOYSTICK = 0, RIGHT_JOYSTICK, XBOX_CONTROLS, NUM_JOYSTICKS };
 enum Gears       { LOW_GEAR, HIGH_GEAR, NUM_GEARS };
 
-#define CLIMB_MOTOR 5
-
 // Compressor
 #define PCM_ID 14
 
@@ -32,9 +30,8 @@ enum Gears       { LOW_GEAR, HIGH_GEAR, NUM_GEARS };
 #define CLIMB_SWITCH 4
 
 #define ENCODER_TICKS_PER_REV 360
-#define WHEEL_DIAMETER_INCHES 6.25
-#define LOW_GEAR_RATIO (17.0/25.9)
-#define HIGH_GEAR_RATIO (17.0/6.96)
+#define WHEEL_DIAMETER_INCHES 6.0
+#define AT_WHEEL_RATIO (26.0/22.0)
 
 // #define CAMERA_INUSE
 
