@@ -126,6 +126,7 @@ Claw::DeployMode()
 void
 Claw::GroundMode()
 {
+	CloseClaw();
 	ExtendPivot();
 	ExtendPiston();
 	Wait(0.1);

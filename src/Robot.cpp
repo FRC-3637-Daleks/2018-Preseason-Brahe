@@ -85,8 +85,8 @@ public:
         double targetAngle, targetDistance;
 
 		frc::SmartDashboard::PutNumber("Autonomous Stage", stage);
-        ldist = leftMotor->GetPosition();
-        rdist = rightMotor->GetPosition();
+        ldist = fabs(leftMotor->GetPosition());
+        rdist = fabs(rightMotor->GetPosition());
         distance = fmax(ldist, rdist);
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
 
@@ -190,36 +190,15 @@ public:
 	{
 		static bool sawButtonRelease = true;
 		static cs::VideoSource nullV;
-		bool useArcade, useDrive, toggleClaw;
+		static long long teleopCnt;
+		bool useArcade, toggleClaw;
 		double climbvalue;
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
-		useDrive  = (rightJoystick->GetZ() == -1.0);
 
 		// Drive controls
 		if (useArcade)
 			d->ArcadeDrive(leftJoystick);
-		else if (useDrive) {
-			double outputMagnitude = rightJoystick->GetY();
-			double curve = -leftJoystick->GetX() / 2;
-
-			if ((outputMagnitude + curve) <= 1 && (outputMagnitude - curve) >= -1)
-				d->TankDrive(outputMagnitude + curve, outputMagnitude - curve);
-			else {
-				if (outputMagnitude > 0) {
-					if (curve > 0)
-						d->TankDrive(1, (2*outputMagnitude - 1));
-					else
-						d->TankDrive((2*outputMagnitude - 1), 1);
-				}
-				else {
-					if (curve > 0)
-						d->TankDrive(-1, (2*outputMagnitude + 1));
-					else
-						d->TankDrive((2*outputMagnitude + 1), -1);
-				}
-			}
-		}
 		else
 			d->TankDrive(leftJoystick, rightJoystick);
 
@@ -259,7 +238,7 @@ public:
 			climb->ReleaseRope();
 
 		if(climbvalue > 0.3)
-			climb->ClimbRope(climbvalue);
+			climb->ClimbRope(0.9);
 		else
 			climb->Stop();
 
@@ -279,8 +258,12 @@ public:
 				cvSink0->SetSource(*usbCamera1);
 			}
 		}
-
 		DashboardUpdates();
+
+		++teleopCnt;
+		if((teleopCnt % 50) == 0)
+			d->DriveOk();
+
 	}
 
 	void
@@ -296,9 +279,6 @@ public:
 	TestPeriodic()
 	{
 		lw->Run();
-		d->DriveOk();
-		d->TankDrive(leftJoystick, rightJoystick);
-		DashboardUpdates();
 	}
 
 	void
