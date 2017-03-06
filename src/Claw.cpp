@@ -118,8 +118,8 @@ void
 Claw::DeployMode()
 {
 	CloseClaw();
-	RetractPivot();
 	ExtendPiston();
+	RetractPivot();
 	m_state = DEPLOY_MODE;
 }
 
@@ -127,8 +127,8 @@ void
 Claw::GroundMode()
 {
 	CloseClaw();
-	ExtendPivot();
 	ExtendPiston();
+	ExtendPivot();
 	Wait(0.1);
 	OpenClaw();
 	m_state = GROUND_MODE;
@@ -138,8 +138,8 @@ void
 Claw::TravelMode()
 {
 	CloseClaw();
-	RetractPivot();
 	RetractPiston();
+	RetractPivot();
 	m_state = TRAVEL_MODE;
 }
 
