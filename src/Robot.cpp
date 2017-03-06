@@ -32,6 +32,7 @@ public:
 	cs::MjpegServer *mjpegServer0;
 	cs::CvSink *cvSink0;
     int startPosition;
+    int autoStage;
 
 	void
 	RobotInit()
@@ -51,6 +52,8 @@ public:
 			cvSink0->SetSource(*usbCamera0);
 		}
 		usbCamera1 = new cs::UsbCamera("USB Camera 1", 1);
+		usbCamera0->SetResolution(640, 480);
+		usbCamera0->SetResolution(640, 480);
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
@@ -63,10 +66,23 @@ public:
 	}
 
 	void
+	DisableInit()
+	{
+		d->SetLeftRightMotorOutputs(0.0, 0.0);
+	}
+
+	void
+	DisablePeriodic()
+	{
+		d->SetLeftRightMotorOutputs(0.0, 0.0);
+	}
+
+	void
 	AutonomousInit()
 	{
         // get autonomous start position
         startPosition = 1;
+        autoStage = 0;
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -78,32 +94,31 @@ public:
 	void
 	AutonomousPeriodic()
 	{
-        static int stage = 0;
-        static double target_acquisition_distance = 7300.0;
+        static double target_acquisition_distance = 5.0;
         static bool target_acquired = false;
         double ldist, rdist, distance;
         double targetAngle, targetDistance;
 
-		frc::SmartDashboard::PutNumber("Autonomous Stage", stage);
+		frc::SmartDashboard::PutNumber("Autonomous Stage", autoStage);
         ldist = fabs(leftMotor->GetPosition());
         rdist = fabs(rightMotor->GetPosition());
         distance = fmax(ldist, rdist);
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
 
-        if(stage == 0) {
+        if(autoStage == 0) {
             // initial start stage - move to target acquisition point
             // for now we will assume that we are oriented in such a
             // way that 80" travel in a straight line is sufficient
             // distance ahead to where if we need to we can turn to
             // find the target
             if (distance < target_acquisition_distance)
-                d->SetLeftRightMotorOutputs(0.5, 0.5);
+                d->SetLeftRightMotorOutputs(-0.45, -0.5);
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
-                stage = 1;
+                autoStage = 1;
             }
         }
-        else if(stage == 1) {
+        else if(autoStage == 1) {
             // roughly 80" from starting point, now need to find
             // the visual targets to orient the bot correctly this
             // will depend on our starting position, left, right or
@@ -114,7 +129,7 @@ public:
         	// How much is a bit of a crap shoot.  If grip code is working
             // we can run this in a polling loop
         	d->ShiftGear(LOW_GEAR);
-            targetAngle = 0.0; targetDistance = 0.0;
+            targetAngle = 0.0; targetDistance = 0.0; target_acquired = 1;
             if(!target_acquired) {
                 // make a call to see if target found here <TBD>
                 // setting targetAngle and targetDistance
@@ -134,9 +149,9 @@ public:
                 }
             }
             else
-                stage = 2;
+                autoStage = 2;
         }
-        else if(stage == 2) {
+        else if(autoStage == 2) {
             // We in theory have found/aligned with the target so
             // we can at this point trundle forward to the peg
             // We need to keep the target centered in our field of
@@ -159,10 +174,10 @@ public:
             }
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
-                stage = 3;
+                autoStage = 3;
             }
         }
-        else if(stage == 3) {
+        else if(autoStage == 3) {
             // We are now at the peg or so we believe, so do the peg deployment
             // and backup
             claw->DeployMode();
@@ -170,7 +185,7 @@ public:
             claw->OpenClaw();
             Wait(0.1);
             d->SetLeftRightMotorOutputs(-0.25, -0.25);
-            stage = 4;
+            autoStage = 4;
         }
         else {
             d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -190,7 +205,7 @@ public:
 	{
 		static bool sawButtonRelease = true;
 		static cs::VideoSource nullV;
-		static long long teleopCnt;
+		static long teleopCnt;
 		bool useArcade, toggleClaw;
 		double climbvalue;
 
@@ -258,12 +273,10 @@ public:
 				cvSink0->SetSource(*usbCamera1);
 			}
 		}
-		DashboardUpdates();
 
 		++teleopCnt;
-		if((teleopCnt % 50) == 0)
-			d->DriveOk();
-
+		if((teleopCnt % 10) == 0)
+			DashboardUpdates();
 	}
 
 	void
@@ -284,6 +297,7 @@ public:
 	void
 	DashboardUpdates()
 	{
+		frc::SmartDashboard::PutBoolean("Compressor ", !(c->GetPressureSwitchValue()));
 		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
 		frc::SmartDashboard::PutBoolean("Gear Switch", claw->GearPresent());
