@@ -33,5 +33,7 @@ enum Gears       { LOW_GEAR, HIGH_GEAR, NUM_GEARS };
 #define WHEEL_DIAMETER_INCHES 6.0
 #define AT_WHEEL_RATIO (26.0/22.0)
 
+#define RPM_THRESHOLD 300
+#define RAMP_RATE 50.0
 
 #endif /* SRC_BRAHE_H_ */

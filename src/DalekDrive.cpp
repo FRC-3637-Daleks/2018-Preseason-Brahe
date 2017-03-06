@@ -221,6 +221,8 @@ DalekDrive::InitDalekDrive(void)
 	m_rightMotor->ConfigNominalOutputVoltage(0.0f, -0.0f);
 	m_leftMotor->ConfigPeakOutputVoltage(+12.0f, -12.0f);
 	m_rightMotor->ConfigPeakOutputVoltage(+12.0f, -12.0f);
+	m_leftMotor->SetVoltageRampRate(RAMP_RATE);
+	m_rightMotor->SetVoltageRampRate(RAMP_RATE);
 	m_leftMotor->SetFeedbackDevice(CANTalon::FeedbackDevice::QuadEncoder);
 	m_rightMotor->SetFeedbackDevice(CANTalon::FeedbackDevice::QuadEncoder);
 	m_leftMotor->ConfigEncoderCodesPerRev(ENCODER_TICKS_PER_REV);
@@ -235,11 +237,13 @@ DalekDrive::InitDalekDrive(void)
 		m_leftSlaveMotor->SetControlMode(CANTalon::ControlMode::kFollower);
 		m_leftSlaveMotor->Set(m_leftMotor->GetDeviceID());
 		m_leftSlaveMotor->SetInverted(false);
+		m_leftSlaveMotor->SetVoltageRampRate(RAMP_RATE);
 	}
 	if(m_rightSlaveMotor) {
 		m_rightSlaveMotor->SetControlMode(CANTalon::ControlMode::kFollower);
 		m_rightSlaveMotor->Set(m_rightMotor->GetDeviceID());
 		m_rightSlaveMotor->SetInverted(false);
+		m_rightSlaveMotor->SetVoltageRampRate(RAMP_RATE);
 	}
 	if(m_gearShift)
 		ShiftGear(HIGH_GEAR);
@@ -250,6 +254,9 @@ DalekDrive::ShiftGear(GearType_t speed)
 {
 	// Assumes that the forward setting of the solenoid == HIGH_GEAR
 	if(m_gearShift) {
+		if((m_leftMotor->GetSpeed() > RPM_THRESHOLD) &&
+		   (m_rightMotor->GetSpeed() > RPM_THRESHOLD))
+			return;
 		switch(speed) {
 		case HIGH_GEAR:
 			m_gearShift->Set(false);
