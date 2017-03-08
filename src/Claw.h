@@ -36,7 +36,6 @@ public:
 	~Claw();
 
 private:
-
 	Solenoid *m_piston;
 	Solenoid *m_pivot;
 	Solenoid *m_arm;
@@ -44,4 +43,6 @@ private:
 	DigitalInput *m_pegSwitch;
 	PistonState m_state;
 	bool m_needFree;
+	frc::LiveWindow* lw = LiveWindow::GetInstance();
+    void clawInit();
 };

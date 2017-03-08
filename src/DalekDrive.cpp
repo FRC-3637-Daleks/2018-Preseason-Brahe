@@ -214,6 +214,16 @@ DalekDrive::SetMaxOutput(double maxOutput)
 void
 DalekDrive::InitDalekDrive(void)
 {
+    // Setup for LiveWindow
+    lw->AddActuator("Drive System", "Drive Motor", m_leftMotor);
+    lw->AddActuator("Drive System", "Drive Motor", m_rightMotor);
+    if(m_leftSlaveMotor)
+        lw->AddActuator("Drive System", "Drive Motor", m_leftSlaveMotor);
+    if(m_rightSlaveMotor)
+        lw->AddActuator("Drive System", "Drive Motor", m_rightSlaveMotor);
+    if(m_gearShift)
+        lw->AddActuator("Drive System", "Gear Shift", m_gearShift);
+
 	// Configure the Talon's as needed
 	m_leftMotor->ConfigNeutralMode(CANTalon::kNeutralMode_Brake);
 	m_rightMotor->ConfigNeutralMode(CANTalon::kNeutralMode_Brake);

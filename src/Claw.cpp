@@ -22,7 +22,7 @@ Claw::Claw(int piston, int pivot, int arm, int gearSwitch)
 	m_arm        = new Solenoid(PCM_ID, arm);
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_needFree   = true;
-	TravelMode();
+	clawInit();
 	return;
 }
 
@@ -34,7 +34,7 @@ Claw::Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
 	m_arm        = arm;
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_needFree   = false;
-	TravelMode();
+	clawInit();
 	return;
 }
 
@@ -46,7 +46,7 @@ Claw::Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
 	m_arm        = &arm;
 	m_gearSwitch = new DigitalInput(gearSwitch);
 	m_needFree   = false;
-	TravelMode();
+	clawInit();
 	return;
 }
 
@@ -58,6 +58,16 @@ Claw::~Claw()
 		delete m_arm;
 		delete m_pivot;
 	}
+}
+
+void
+Claw::clawInit()
+{
+    lw->AddActuator("Claw Mechanism", "laterial piston", m_piston);
+    lw->AddActuator("Claw Mechanism", "pivot piston", m_pivot);
+    lw->AddActuator("Claw Mechanism", "arm piston", m_arm);
+    lw->AddSensor("Claw Mechanism", "gear present switch", m_gearSwitch);
+    TravelMode();
 }
 
 void

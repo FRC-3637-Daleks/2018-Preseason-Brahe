@@ -30,5 +30,7 @@ class Climber
 		DigitalInput *m_index;
 		DigitalInput *m_kswitch;
 		bool m_needFree;
+        frc::LiveWindow* lw = LiveWindow::GetInstance();
+        void climberInit();
 };
 

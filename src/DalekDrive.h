@@ -65,4 +65,5 @@ class DalekDrive {
 	Solenoid *m_gearShift;
 	frc::RobotDrive *m_drive;
 	bool m_needFree;
+	frc::LiveWindow* lw = LiveWindow::GetInstance();
 };
