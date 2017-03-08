@@ -94,15 +94,16 @@ public:
 	void
 	AutonomousPeriodic()
 	{
-        static double target_acquisition_distance = 5.0;
+        static double target_acquisition_distance = 6720; // ~4.6 ft
+        static double backup_distance;
         static bool target_acquired = false;
         double ldist, rdist, distance;
         double targetAngle, targetDistance;
 
 		frc::SmartDashboard::PutNumber("Autonomous Stage", autoStage);
-        ldist = fabs(leftMotor->GetPosition());
-        rdist = fabs(rightMotor->GetPosition());
-        distance = fmax(ldist, rdist);
+        ldist = abs(leftMotor->GetPosition());
+        rdist = abs(rightMotor->GetPosition());
+        distance = (ldist >  rdist) ? ldist : rdist;
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
 
         if(autoStage == 0) {
@@ -135,13 +136,13 @@ public:
                 // setting targetAngle and targetDistance
                 switch(startPosition) {
                     case 0: // left side
-                        d->SetLeftRightMotorOutputs(0.25, -0.25);
+                        d->SetLeftRightMotorOutputs(-0.25, 0.25);
                         break;
                     case 1: // center
                         d->SetLeftRightMotorOutputs(0.25, 0.25);
                         break;
                     case 2: // right side
-                        d->SetLeftRightMotorOutputs(-0.25, 0.25);
+                        d->SetLeftRightMotorOutputs(0.25, -0.25);
                         break;
                     default:
                         d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -164,13 +165,13 @@ public:
                 if (targetAngle > 0)
                     // off to the right, speed should be set depending on
                     // off center we are
-                    d->SetLeftRightMotorOutputs(-0.25, 0.25);
+                    d->SetLeftRightMotorOutputs(0.25, -0.25);
                 else if (targetAngle == 0)
                     d->SetLeftRightMotorOutputs(0.25, 0.25);
                 else 
                     // off to the right, speed should be set depending on
                     // off center we are
-                    d->SetLeftRightMotorOutputs(0.25, -0.25);
+                    d->SetLeftRightMotorOutputs(-0.25, 0.25);
             }
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -184,12 +185,21 @@ public:
             Wait(0.1);
             claw->OpenClaw();
             Wait(0.1);
-            d->SetLeftRightMotorOutputs(-0.25, -0.25);
+            d->SetLeftRightMotorOutputs(0.25, 0.25);
+            backup_distance = distance - 915;
             autoStage = 4;
         }
-        else {
-            d->SetLeftRightMotorOutputs(0.0, 0.0);
+        else if(autoStage == 4) {
+            // backup from the peg for about a foot
+            if(backup_distance > distance)
+                d->SetLeftRightMotorOutputs(0.25, 0.25);
+            else {
+                d->SetLeftRightMotorOutputs(0.0, 0.0);
+                autoStage = 5;
+            }
         }
+        else
+            d->SetLeftRightMotorOutputs(0.0, 0.0);
     }
 
 	void
