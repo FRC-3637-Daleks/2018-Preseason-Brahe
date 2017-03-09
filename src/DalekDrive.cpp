@@ -215,14 +215,14 @@ void
 DalekDrive::InitDalekDrive(void)
 {
     // Setup for LiveWindow
-    lw->AddActuator("Drive System", "Drive Motor", m_leftMotor);
-    lw->AddActuator("Drive System", "Drive Motor", m_rightMotor);
+    lw->AddActuator("Drive System Left ", "Drive Motor", m_leftMotor);
+    lw->AddActuator("Drive System Right", "Drive Motor", m_rightMotor);
     if(m_leftSlaveMotor)
-        lw->AddActuator("Drive System", "Drive Motor", m_leftSlaveMotor);
+        lw->AddActuator("Drive System Left", "Drive Motor slave", m_leftSlaveMotor);
     if(m_rightSlaveMotor)
-        lw->AddActuator("Drive System", "Drive Motor", m_rightSlaveMotor);
+        lw->AddActuator("Drive System Right", "Drive Motor slave", m_rightSlaveMotor);
     if(m_gearShift)
-        lw->AddActuator("Drive System", "Gear Shift", m_gearShift);
+        lw->AddActuator("Gear Shift", "Gear Shift", m_gearShift);
 
 	// Configure the Talon's as needed
 	m_leftMotor->ConfigNeutralMode(CANTalon::kNeutralMode_Brake);

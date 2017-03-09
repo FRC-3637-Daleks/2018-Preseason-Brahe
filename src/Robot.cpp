@@ -109,9 +109,8 @@ public:
         if(autoStage == 0) {
             // initial start stage - move to target acquisition point
             // for now we will assume that we are oriented in such a
-            // way that 80" travel in a straight line is sufficient
-            // distance ahead to where if we need to we can turn to
-            // find the target
+            // way that 60" travel is sufficient distance to get where
+            // can find the target
             if (distance < target_acquisition_distance)
                 d->SetLeftRightMotorOutputs(-0.45, -0.5);
             else {

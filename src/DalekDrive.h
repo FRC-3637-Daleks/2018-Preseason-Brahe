@@ -55,7 +55,7 @@ class DalekDrive {
 	void ShiftGear(GearType_t speed);
 	bool DriveOk();
 
- protected:
+ private:
 	void InitDalekDrive();
 	void printFaults(MotorType_t drive, int faults);
 	CANTalon *m_leftMotor;

@@ -53,7 +53,7 @@ Climber::~Climber()
 }
 
 void
-climberInit()
+Climber::climberInit()
 {
     lw->AddActuator("Climbing Mechanism", "Climb Motor", m_climb);
     lw->AddActuator("Climbing Mechanism", "Climb Piston", m_piston);
