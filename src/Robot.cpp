@@ -9,12 +9,20 @@
 #include <SmartDashboard/SendableChooser.h>
 #include <SmartDashboard/SmartDashboard.h>
 
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/Features2d.hpp>
+
 #include <WPILib.h>
 #include <CANTalon.h>
 #include <Brahe.h>
 #include <DalekDrive.h>
 #include <Claw.h>
 #include <Climber.h>
+#include <Target.h>
+#include <GripPipeline.h>
 
 class Robot: public frc::IterativeRobot
 {
@@ -28,11 +36,17 @@ public:
 	Claw *claw;
 	Climber *climb;
 	Solenoid *climbPiston;
-	cs::UsbCamera *usbCamera0, *usbCamera1;
+	Target *targeter;
+	cs::UsbCamera *usbCamera0, *usbCamera1, *usbCamera2;
 	cs::MjpegServer *mjpegServer0;
 	cs::CvSink *cvSink0;
+    	cs::CvSource cvSource0;
+	girp::GripPipeline gp;
+	cv::Rect r1, r2;
+	std::vector(std::vector(cv::Point>> *dContours;
     int startPosition;
     int autoStage;
+    	bool isCam0;
 
 	void
 	RobotInit()
@@ -52,13 +66,20 @@ public:
 			cvSink0->SetSource(*usbCamera0);
 		}
 		usbCamera1 = new cs::UsbCamera("USB Camera 1", 1);
+		usbCamera2 = new cs::UsbCamera("USB Camera 2", 2);
+
 		usbCamera0->SetResolution(640, 480);
 		usbCamera0->SetResolution(640, 480);
+		usbCamera0->SetExposureManual(.75);
+		usbCamera0->SetBrigtness(90);
+
+		usbCamera1->SetBrightness(45);
+		usbCamera1->SetExposureAuto();
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
-
+		cvSource0     = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
 		c = new Compressor(PCM_ID);
 		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
 		claw  = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH);
@@ -215,6 +236,7 @@ public:
 		static bool sawButtonRelease = true;
 		static cs::VideoSource nullV;
 		static long teleopCnt;
+		static cv::rectangle nullR;
 		bool useArcade, toggleClaw;
 		double climbvalue;
 
@@ -283,6 +305,67 @@ public:
 				mjpegServer0->SetSource(*usbCamera1);
 				cvSink0->SetSource(*usbCamera1);
 			}
+			isCam0 = false;
+		}
+		if (xbox->GetPOV(0)==0){
+			if (usbCamera2){
+				mjpegServer0->SetSource(nullV);
+				cvSink0->SetSource(nullV);
+				mjpegServer0->SetSource(*usbCamera2);
+				cvSink0->SetSource(*usbCamera2);
+			}
+			isCam0 = false;
+		}
+		cv::Mat source;
+
+		if (cvSink0->GrabFrame(source)){
+			if(isCam0){
+
+				gp.process(source);
+				dContours = gp.getfindContoursOutput();
+
+
+				if (dContours->size()>1){
+					unsigned int i = 0;
+					int x1 = 0;
+					while (i<dContours->size()){
+
+
+						if ((std::abs((boundingRect(dContours->at(i)).height/boundingRect(dContours->at(i)).width)-(2.5)))/2.5 <= .2 ){
+							if(boundingRect(dContours->at(i)).br().x-(boundingRect(dContours->at(i)).width/2) > x1){
+								r1 = boundingRect(dContours->at(i));
+
+								x1 = boundingRect(dContours->at(i)).br().x-(boundingRect(dContours->at(i)).width/2);
+							}
+							else{
+								r2 = boundingRect(dContours->at(i));
+							}
+
+						}
+
+
+						i++;
+					}
+					cv::rectangle(source, r1, cv::Scalar(225,0,0), 5, 8, 0);
+					cv::rectangle(source, r2, cv::Scalar(225,0,0), 5, 8, 0);
+					frc::SmartDashboard::PutNumber("area1", r1.area());
+					frc::SmartDashboard::PutNumber("area2", r2.area());
+				}
+				else if(dContours->size()>0){
+					r1 = boundingRect(dContours->at(0));
+					r2 = nullR;
+					cv::rectangle(source, r1, cv::Scalar(225,0,0), 1, 8, 0);
+					frc::SmartDashboard::PutNumber("area1", r1.area());
+					frc::SmartDashboard::PutNumber("area2", 0);
+				}
+				frc::SmartDashboard::PutNumber("Contours", dContours->size());
+
+
+
+			}
+			else{
+			}
+			cvSource0.PutFrame(source);
 		}
 
 		++teleopCnt;
@@ -308,6 +391,16 @@ public:
 	void
 	DashboardUpdates()
 	{
+		/*frc::SmartDashboard::PutNumber("R1 X", targeter->getR1X());
+		frc::SmartDashboard::PutNumber("R2 X", targeter->getR2X());
+		frc::SmartDashboard::PutNumber("R1 Y", targeter->getR1Y());
+		frc::SmartDashboard::PutNumber("R2 Y", targeter->getR2Y());
+		if ((targeter->getR1X() + targeter->getR2X() )/ 2 > 160){
+			frc::SmartDashboard::PutString("Direction", "Go Left");
+		}
+		else{
+			frc::SmartDashboard::PutString("Direction", "Go Right");
+		}*/
 		frc::SmartDashboard::PutBoolean("Compressor ", !(c->GetPressureSwitchValue()));
 		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
@@ -315,6 +408,18 @@ public:
 		frc::SmartDashboard::PutBoolean("Drum Switch", climb->IsIndexed());
 		frc::SmartDashboard::PutBoolean("Claw Open", claw->IsOpen());
 		frc::SmartDashboard::PutBoolean("At Top", climb->IsAtTop());
+		frc::SmartDashboard::PutNumber("Contour 1X", r1.br().x-r1.width);
+		frc::SmartDashboard::PutNumber("Contour 1Y", r1.br().y-r1.height);
+		frc::SmartDashboard::PutNumber("Contour 2X", r2.br().x-r2.width);
+		frc::SmartDashboard::PutNumber("Contour 2Y", r2.br().y-r2.height);
+		frc::SmartDashboard::PutString("Camera", cvSink0->GetSource().GetName());
+		frc::SmartDashboard::PutBoolean("cam0", isCam0);
+		if(r1.br().x-(r1.width/2) + r2.br().x-(r2.width/2) / 2 < 180){
+			frc::SmartDashboard::PutString("Direction", "Go Left");
+		}
+		else{
+			frc::SmartDashboard::PutString("Direction", "Go Right");
+		}
 	}
 
 private:
