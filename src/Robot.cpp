@@ -37,16 +37,16 @@ public:
 	Climber *climb;
 	Solenoid *climbPiston;
 	Target *targeter;
-	cs::UsbCamera *usbCamera0, *usbCamera1, *usbCamera2;
+	cs::UsbCamera *usbCamera0, *usbCamera1;
 	cs::MjpegServer *mjpegServer0;
 	cs::CvSink *cvSink0;
-    	cs::CvSource cvSource0;
-	girp::GripPipeline gp;
+    cs::CvSource cvSource0;
+	grip::GripPipeline gp;
 	cv::Rect r1, r2;
-	std::vector(std::vector(cv::Point>> *dContours;
+	std::vector<std::vector<cv::Point>> *dContours;
     int startPosition;
     int autoStage;
-    	bool isCam0;
+    bool isCam0;
 
 	void
 	RobotInit()
@@ -64,26 +64,28 @@ public:
 			cvSink0      = new cs::CvSink("opencv_USB Camera 0");
 			mjpegServer0->SetSource(*usbCamera0);
 			cvSink0->SetSource(*usbCamera0);
+
+			usbCamera0->SetResolution(640, 480);
+			usbCamera0->SetExposureManual(.75);
+			usbCamera0->SetBrightness(90);
+			isCam0 = true;
 		}
 		usbCamera1 = new cs::UsbCamera("USB Camera 1", 1);
-		usbCamera2 = new cs::UsbCamera("USB Camera 2", 2);
 
-		usbCamera0->SetResolution(640, 480);
-		usbCamera0->SetResolution(640, 480);
-		usbCamera0->SetExposureManual(.75);
-		usbCamera0->SetBrigtness(90);
-
-		usbCamera1->SetBrightness(45);
-		usbCamera1->SetExposureAuto();
+		if(usbCamera1) {
+			usbCamera1->SetResolution(640, 480);
+			usbCamera1->SetBrightness(45);
+			usbCamera1->SetExposureAuto();
+		}
+		cvSource0     = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
-		cvSource0     = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
-		c = new Compressor(PCM_ID);
-		d = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
-		claw  = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH);
-		climb = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
+		c             = new Compressor(PCM_ID);
+		d             = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
+		claw          = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH);
+		climb         = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
 	}
 
 	void
@@ -236,9 +238,10 @@ public:
 		static bool sawButtonRelease = true;
 		static cs::VideoSource nullV;
 		static long teleopCnt;
-		static cv::rectangle nullR;
+		static cv::Rect nullR;
 		bool useArcade, toggleClaw;
 		double climbvalue;
+		cv::Mat source;
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
 
@@ -307,30 +310,16 @@ public:
 			}
 			isCam0 = false;
 		}
-		if (xbox->GetPOV(0)==0){
-			if (usbCamera2){
-				mjpegServer0->SetSource(nullV);
-				cvSink0->SetSource(nullV);
-				mjpegServer0->SetSource(*usbCamera2);
-				cvSink0->SetSource(*usbCamera2);
-			}
-			isCam0 = false;
-		}
-		cv::Mat source;
 
 		if (cvSink0->GrabFrame(source)){
 			if(isCam0){
-
 				gp.process(source);
 				dContours = gp.getfindContoursOutput();
-
 
 				if (dContours->size()>1){
 					unsigned int i = 0;
 					int x1 = 0;
 					while (i<dContours->size()){
-
-
 						if ((std::abs((boundingRect(dContours->at(i)).height/boundingRect(dContours->at(i)).width)-(2.5)))/2.5 <= .2 ){
 							if(boundingRect(dContours->at(i)).br().x-(boundingRect(dContours->at(i)).width/2) > x1){
 								r1 = boundingRect(dContours->at(i));
@@ -340,10 +329,7 @@ public:
 							else{
 								r2 = boundingRect(dContours->at(i));
 							}
-
 						}
-
-
 						i++;
 					}
 					cv::rectangle(source, r1, cv::Scalar(225,0,0), 5, 8, 0);
@@ -359,11 +345,6 @@ public:
 					frc::SmartDashboard::PutNumber("area2", 0);
 				}
 				frc::SmartDashboard::PutNumber("Contours", dContours->size());
-
-
-
-			}
-			else{
 			}
 			cvSource0.PutFrame(source);
 		}
