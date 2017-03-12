@@ -175,7 +175,7 @@ public:
                         d->SetLeftRightMotorOutputs(0.0, 0.0);
                         break;
                 }
-                if (abs(targetAngle) > 5){
+                if (abs(targetAngle) < 5){
                 	target_acquired = true;
               	}
             }
