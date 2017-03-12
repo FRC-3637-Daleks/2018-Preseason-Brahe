@@ -4,36 +4,22 @@
  *  Created on: Mar 1, 2017
  *      Author: Michael
  */
-
 #pragma once
+
 #include <Brahe.h>
-#include <WPILib.h>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d.hpp>
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <map>
-#include <vector>
-#include <string>
-#include <math.h>
 #include <GripPipeline.h>
-#define D_FOV 75;
-#define H_FOV 67;
-#define V_FOV 41;
+
 class Target {
 public:
+
 	typedef enum trackState { SEARCHING, AQUIRED, TRACKING } trackingState_t ;
-	Target();
-	void processMat(cv::Mat input);
-	cv::Mat outputMat();
-	int getR1X();
-	int getR1Y();
-	int getR2X();
-	int getR2Y();
+	Target(int cam0, int cam1);
+	void process();
 	bool isAquired();
 	bool isTracked();
 	bool isLooking();
@@ -41,11 +27,13 @@ public:
 	double targetAngle();
 
 private:
-	trackingState_t m_state;
-	cv::Mat source0;
-	grip::GripPipeline gp;
+	cs::UsbCamera usbCamera0, usbCamera1;
 	cv::Rect r1, r2;
+	trackingState_t m_state;
+	int RESOLUTION_X, RESOLUTION_Y, TARGET_WIDTH;
+	double FOV_H, FOV_V;
 	double m_distance;
 	double m_angle;
 	double m_frame[4];
+	grip::GripPipeline gp;
 };
