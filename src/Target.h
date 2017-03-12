@@ -20,20 +20,31 @@ public:
 	typedef enum trackState { SEARCHING, AQUIRED, TRACKING } trackingState_t ;
 	Target(int cam0, int cam1);
 	void process();
+	void switchCam0();
+	void switchCam1();
 	bool isAquired();
 	bool isTracked();
 	bool isLooking();
 	double targetDistance();
 	double targetAngle();
+	cv::Rect getR1();
+	cv::Rect getR2();
 
 private:
-	cs::UsbCamera usbCamera0, usbCamera1;
+	cs::UsbCamera *usbCamera0, *usbCamera1;
+	cs::CvSink *cvSink0;
+	cs::MjpegServer *mjpegServer0;
+	cs::CvSource cvSource0;
 	cv::Rect r1, r2;
+	cv::Mat source0;
 	trackingState_t m_state;
+	cv::Rect nullR;
+	cs::VideoSource nullV;
 	int RESOLUTION_X, RESOLUTION_Y, TARGET_WIDTH;
 	double FOV_H, FOV_V;
 	double m_distance;
 	double m_angle;
 	double m_frame[4];
+	bool isCam0;
 	grip::GripPipeline gp;
 };

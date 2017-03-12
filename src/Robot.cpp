@@ -37,10 +37,10 @@ public:
 	Climber *climb;
 	Solenoid *climbPiston;
 	Target *targeter;
-	cs::UsbCamera *usbCamera0, *usbCamera1;
+	/*cs::UsbCamera *usbCamera0, *usbCamera1;
 	cs::MjpegServer *mjpegServer0;
 	cs::CvSink *cvSink0;
-    cs::CvSource cvSource0;
+    cs::CvSource cvSource0;*/
 	grip::GripPipeline gp;
 	cv::Rect r1, r2;
 	std::vector<std::vector<cv::Point>> *dContours;
@@ -57,8 +57,8 @@ public:
 		rightSlave  = new CANTalon(RIGHT_SLAVEMOTOR);
 		climbMotor  = new CANTalon(CLIMB_MOTOR);
 		climbPiston = new Solenoid(PCM_ID, CLIMB);
-
-		usbCamera0  = new cs::UsbCamera("USB Camera 0", 0);
+		targeter 	= new Target(0, 1);
+		/*usbCamera0  = new cs::UsbCamera("USB Camera 0", 0);
 		if(usbCamera0) {
 			mjpegServer0 = new cs::MjpegServer("serve_USB Camera 0", 1181);
 			cvSink0      = new cs::CvSink("opencv_USB Camera 0");
@@ -78,6 +78,7 @@ public:
 			usbCamera1->SetExposureAuto();
 		}
 		cvSource0     = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
+		*/
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
@@ -128,7 +129,7 @@ public:
         rdist = abs(rightMotor->GetPosition());
         distance = (ldist >  rdist) ? ldist : rdist;
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
-
+        targeter->switchCam0();
         if(autoStage == 0) {
             // initial start stage - move to target acquisition point
             // for now we will assume that we are oriented in such a
@@ -156,6 +157,10 @@ public:
             if(!target_acquired) {
                 // make a call to see if target found here <TBD>
                 // setting targetAngle and targetDistance
+            	targeter->process();
+            	targetAngle = targeter->targetAngle();
+            	targetDistance = targeter->targetDistance();
+
                 switch(startPosition) {
                     case 0: // left side
                         d->SetLeftRightMotorOutputs(-0.25, 0.25);
@@ -170,6 +175,9 @@ public:
                         d->SetLeftRightMotorOutputs(0.0, 0.0);
                         break;
                 }
+                if (abs(targetAngle) > 5){
+                	target_acquired = true;
+              	}
             }
             else
                 autoStage = 2;
@@ -238,10 +246,8 @@ public:
 		static bool sawButtonRelease = true;
 		static cs::VideoSource nullV;
 		static long teleopCnt;
-		static cv::Rect nullR;
 		bool useArcade, toggleClaw;
 		double climbvalue;
-		cv::Mat source;
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
 
@@ -292,63 +298,19 @@ public:
 			climb->Stop();
 
 		// Camera controls
-		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand)) ||
+		/*if((xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand)) ||
 		   (leftJoystick->GetTop())) {
-			mjpegServer0->SetSource(nullV);
-			cvSink0->SetSource(nullV);
-			mjpegServer0->SetSource(*usbCamera0);
-			cvSink0->SetSource(*usbCamera0);
+			targeter->switchCam0();
 		}
 		
 		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kLeftHand)) ||
 		   (rightJoystick->GetTop())) {
-			if(usbCamera1) {
-				mjpegServer0->SetSource(nullV);
-				cvSink0->SetSource(nullV);
-				mjpegServer0->SetSource(*usbCamera1);
-				cvSink0->SetSource(*usbCamera1);
-			}
-			isCam0 = false;
-		}
+			targeter->switchCam1();
+		}*/
 
-		if (cvSink0->GrabFrame(source)){
-			if(isCam0){
-				gp.process(source);
-				dContours = gp.getfindContoursOutput();
-
-				if (dContours->size()>1){
-					unsigned int i = 0;
-					int x1 = 0;
-					while (i<dContours->size()){
-						if ((std::abs((boundingRect(dContours->at(i)).height/boundingRect(dContours->at(i)).width)-(2.5)))/2.5 <= .2 ){
-							if(boundingRect(dContours->at(i)).br().x-(boundingRect(dContours->at(i)).width/2) > x1){
-								r1 = boundingRect(dContours->at(i));
-
-								x1 = boundingRect(dContours->at(i)).br().x-(boundingRect(dContours->at(i)).width/2);
-							}
-							else{
-								r2 = boundingRect(dContours->at(i));
-							}
-						}
-						i++;
-					}
-					cv::rectangle(source, r1, cv::Scalar(225,0,0), 5, 8, 0);
-					cv::rectangle(source, r2, cv::Scalar(225,0,0), 5, 8, 0);
-					frc::SmartDashboard::PutNumber("area1", r1.area());
-					frc::SmartDashboard::PutNumber("area2", r2.area());
-				}
-				else if(dContours->size()>0){
-					r1 = boundingRect(dContours->at(0));
-					r2 = nullR;
-					cv::rectangle(source, r1, cv::Scalar(225,0,0), 1, 8, 0);
-					frc::SmartDashboard::PutNumber("area1", r1.area());
-					frc::SmartDashboard::PutNumber("area2", 0);
-				}
-				frc::SmartDashboard::PutNumber("Contours", dContours->size());
-			}
-			cvSource0.PutFrame(source);
-		}
-
+		targeter->process();
+		//r1 = targeter->getR1();
+		//r2 = targeter->getR2();
 		++teleopCnt;
 		if((teleopCnt % 10) == 0)
 			DashboardUpdates();
@@ -372,16 +334,6 @@ public:
 	void
 	DashboardUpdates()
 	{
-		/*frc::SmartDashboard::PutNumber("R1 X", targeter->getR1X());
-		frc::SmartDashboard::PutNumber("R2 X", targeter->getR2X());
-		frc::SmartDashboard::PutNumber("R1 Y", targeter->getR1Y());
-		frc::SmartDashboard::PutNumber("R2 Y", targeter->getR2Y());
-		if ((targeter->getR1X() + targeter->getR2X() )/ 2 > 160){
-			frc::SmartDashboard::PutString("Direction", "Go Left");
-		}
-		else{
-			frc::SmartDashboard::PutString("Direction", "Go Right");
-		}*/
 		frc::SmartDashboard::PutBoolean("Compressor ", !(c->GetPressureSwitchValue()));
 		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
@@ -389,18 +341,17 @@ public:
 		frc::SmartDashboard::PutBoolean("Drum Switch", climb->IsIndexed());
 		frc::SmartDashboard::PutBoolean("Claw Open", claw->IsOpen());
 		frc::SmartDashboard::PutBoolean("At Top", climb->IsAtTop());
-		frc::SmartDashboard::PutNumber("Contour 1X", r1.br().x-r1.width);
+		/*frc::SmartDashboard::PutNumber("Contour 1X", r1.br().x-r1.width);
 		frc::SmartDashboard::PutNumber("Contour 1Y", r1.br().y-r1.height);
 		frc::SmartDashboard::PutNumber("Contour 2X", r2.br().x-r2.width);
 		frc::SmartDashboard::PutNumber("Contour 2Y", r2.br().y-r2.height);
-		frc::SmartDashboard::PutString("Camera", cvSink0->GetSource().GetName());
 		frc::SmartDashboard::PutBoolean("cam0", isCam0);
 		if(r1.br().x-(r1.width/2) + r2.br().x-(r2.width/2) / 2 < 180){
 			frc::SmartDashboard::PutString("Direction", "Go Left");
 		}
 		else{
 			frc::SmartDashboard::PutString("Direction", "Go Right");
-		}
+		}*/
 	}
 
 private:
