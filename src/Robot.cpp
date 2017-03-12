@@ -267,14 +267,16 @@ public:
 			climb->Stop();
 
 		// Camera controls
-		if (xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand)) {
+		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand)) ||
+		   (leftJoystick->GetTop())) {
 			mjpegServer0->SetSource(nullV);
 			cvSink0->SetSource(nullV);
 			mjpegServer0->SetSource(*usbCamera0);
 			cvSink0->SetSource(*usbCamera0);
 		}
 		
-		if (xbox->GetBumper(frc::GenericHID::JoystickHand::kLeftHand)) {
+		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kLeftHand)) ||
+		   (rightJoystick->GetTop())) {
 			if(usbCamera1) {
 				mjpegServer0->SetSource(nullV);
 				cvSink0->SetSource(nullV);
