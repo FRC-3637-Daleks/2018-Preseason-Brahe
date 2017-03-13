@@ -14,14 +14,19 @@
 #include <opencv2/features2d.hpp>
 #include <GripPipeline.h>
 
+#define TARGET_WIDTH 2
+#define FOV_V 0
+#define FOV_H 0
+#define RESOLUTION_X 320
+#define RESOLUTION_Y 240
+
 class Target {
 public:
 
 	typedef enum trackState { SEARCHING, AQUIRED, TRACKING } trackingState_t ;
 	Target(int cam0, int cam1);
-	void process();
-	void switchCam0();
-	void switchCam1();
+	void processFrame();
+	void switchCam(enum Cameras cam);
 	bool isAquired();
 	bool isTracked();
 	bool isLooking();
@@ -31,20 +36,20 @@ public:
 	cv::Rect getR2();
 
 private:
-	cs::UsbCamera *usbCamera0, *usbCamera1;
-	cs::CvSink *cvSink0;
-	cs::MjpegServer *mjpegServer0;
-	cs::CvSource cvSource0;
-	cv::Rect r1, r2;
-	cv::Mat source0;
+	cs::UsbCamera *m_usbCamera0, *m_usbCamera1;
+	cs::CvSink *m_cvSink;
+	cs::MjpegServer *m_mjpegServer;
+	cs::CvSource m_cvSource;
+	cv::Rect m_r1, m_r2;
+
 	trackingState_t m_state;
-	cv::Rect nullR;
-	cs::VideoSource nullV;
-	int RESOLUTION_X, RESOLUTION_Y, TARGET_WIDTH;
-	double FOV_H, FOV_V;
+	cv::Rect m_nullR;
+	cs::VideoSource m_nullV;
+	int m_resX, m_resY, m_target_width;
+	double m_fovV, m_fovH;
 	double m_distance;
 	double m_angle;
 	double m_frame[4];
-	bool isCam0;
-	grip::GripPipeline gp;
+	bool m_isCam0;
+	grip::GripPipeline m_gp;
 };

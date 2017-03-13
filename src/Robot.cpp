@@ -56,8 +56,8 @@ public:
 		rightMotor  = new CANTalon(RIGHT_DRIVEMOTOR);
 		rightSlave  = new CANTalon(RIGHT_SLAVEMOTOR);
 		climbMotor  = new CANTalon(CLIMB_MOTOR);
-		climbPiston = new Solenoid(PCM_ID, CLIMB);
-		targeter 	= new Target(0, 1);
+		climbPiston = new Solenoid(PCM_ID, CLIMB_SOLENOID);
+		targeter 	= new Target(FRONT_CAMERA, REAR_CAMERA);
 		/*usbCamera0  = new cs::UsbCamera("USB Camera 0", 0);
 		if(usbCamera0) {
 			mjpegServer0 = new cs::MjpegServer("serve_USB Camera 0", 1181);
@@ -84,8 +84,8 @@ public:
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
 		c             = new Compressor(PCM_ID);
-		d             = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER);
-		claw          = new Claw(PISTON, PIVOT, ARM, GEAR_SWITCH);
+		d             = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER_SOLENOID);
+		claw          = new Claw(PISTON_SOLENOID, PIVOT_SOLENOID, ARM_SOLENOID, GEAR_SWITCH);
 		climb         = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
 	}
 
@@ -125,11 +125,11 @@ public:
         double targetAngle, targetDistance;
 
 		frc::SmartDashboard::PutNumber("Autonomous Stage", autoStage);
-        ldist = abs(leftMotor->GetPosition());
-        rdist = abs(rightMotor->GetPosition());
+        ldist = abs(leftMotor->GetEncPosition());
+        rdist = abs(rightMotor->GetEncPosition());
         distance = (ldist >  rdist) ? ldist : rdist;
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
-        targeter->switchCam0();
+        targeter->switchCam(FRONT_CAMERA);
         if(autoStage == 0) {
             // initial start stage - move to target acquisition point
             // for now we will assume that we are oriented in such a
@@ -157,7 +157,7 @@ public:
             if(!target_acquired) {
                 // make a call to see if target found here <TBD>
                 // setting targetAngle and targetDistance
-            	targeter->process();
+            	targeter->processFrame();
             	targetAngle = targeter->targetAngle();
             	targetDistance = targeter->targetDistance();
 
@@ -308,7 +308,7 @@ public:
 			targeter->switchCam1();
 		}*/
 
-		targeter->process();
+		targeter->processFrame();
 		//r1 = targeter->getR1();
 		//r2 = targeter->getR2();
 		++teleopCnt;
