@@ -37,16 +37,10 @@ public:
 	Climber *climb;
 	Solenoid *climbPiston;
 	Target *targeter;
-	/*cs::UsbCamera *usbCamera0, *usbCamera1;
-	cs::MjpegServer *mjpegServer0;
-	cs::CvSink *cvSink0;
-    cs::CvSource cvSource0;*/
-	grip::GripPipeline gp;
 	cv::Rect r1, r2;
-	std::vector<std::vector<cv::Point>> *dContours;
-    int startPosition;
-    int autoStage;
-    bool isCam0;
+    	int startPosition;
+   	int autoStage;
+    	
 
 	void
 	RobotInit()
@@ -58,27 +52,6 @@ public:
 		climbMotor  = new CANTalon(CLIMB_MOTOR);
 		climbPiston = new Solenoid(PCM_ID, CLIMB_SOLENOID);
 		targeter 	= new Target(FRONT_CAMERA, REAR_CAMERA);
-		/*usbCamera0  = new cs::UsbCamera("USB Camera 0", 0);
-		if(usbCamera0) {
-			mjpegServer0 = new cs::MjpegServer("serve_USB Camera 0", 1181);
-			cvSink0      = new cs::CvSink("opencv_USB Camera 0");
-			mjpegServer0->SetSource(*usbCamera0);
-			cvSink0->SetSource(*usbCamera0);
-
-			usbCamera0->SetResolution(640, 480);
-			usbCamera0->SetExposureManual(.75);
-			usbCamera0->SetBrightness(90);
-			isCam0 = true;
-		}
-		usbCamera1 = new cs::UsbCamera("USB Camera 1", 1);
-
-		if(usbCamera1) {
-			usbCamera1->SetResolution(640, 480);
-			usbCamera1->SetBrightness(45);
-			usbCamera1->SetExposureAuto();
-		}
-		cvSource0     = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
-		*/
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
@@ -130,6 +103,9 @@ public:
         distance = (ldist >  rdist) ? ldist : rdist;
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
         targeter->switchCam(FRONT_CAMERA);
+	targeter->processFrame();
+        targetAngle = targeter->targetAngle();
+        targetDistance = targeter->targetDistance();
         if(autoStage == 0) {
             // initial start stage - move to target acquisition point
             // for now we will assume that we are oriented in such a
@@ -157,10 +133,6 @@ public:
             if(!target_acquired) {
                 // make a call to see if target found here <TBD>
                 // setting targetAngle and targetDistance
-            	targeter->processFrame();
-            	targetAngle = targeter->targetAngle();
-            	targetDistance = targeter->targetDistance();
-
                 switch(startPosition) {
                     case 0: // left side
                         d->SetLeftRightMotorOutputs(-0.25, 0.25);
