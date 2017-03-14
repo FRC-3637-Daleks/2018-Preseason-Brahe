@@ -15,7 +15,7 @@
 
 using namespace frc;
 
-Claw::Claw(int piston, int pivot, int arm, int gearSwitch)
+Claw::Claw(int piston, int pivot, int arm, int gearSwitch, int cameraServo)
 {
 	m_piston     = new Solenoid(PCM_ID, piston);
 	m_pivot      = new Solenoid(PCM_ID, pivot);
@@ -27,7 +27,7 @@ Claw::Claw(int piston, int pivot, int arm, int gearSwitch)
 }
 
 Claw::Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
-		int gearSwitch)
+		int gearSwitch, int cameraServo)
 {
 	m_piston     = piston;
 	m_pivot      = pivot;
@@ -39,7 +39,7 @@ Claw::Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm,
 }
 
 Claw::Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm,
-		int gearSwitch)
+		int gearSwitch, int cameraServo)
 {
 	m_piston     = &piston;
 	m_pivot      = &pivot;
@@ -106,6 +106,18 @@ Claw::CloseClaw()
 	m_arm->Set(true);
 }
 
+void
+Claw::ServoUp()
+{
+	m_cameraServo->Set(.5);
+}
+
+void
+Claw::ServoDown()
+{
+	m_cameraServo->Set(0);
+}
+
 bool
 Claw::IsOpen()
 {
@@ -131,6 +143,7 @@ Claw::DeployMode()
 	ExtendPiston();
 	RetractPivot();
 	m_state = DEPLOY_MODE;
+	ServoUp();
 }
 
 void
@@ -142,6 +155,7 @@ Claw::GroundMode()
 	Wait(0.1);
 	OpenClaw();
 	m_state = GROUND_MODE;
+	ServoDown();
 }
 
 void
@@ -151,6 +165,7 @@ Claw::TravelMode()
 	RetractPiston();
 	RetractPivot();
 	m_state = TRAVEL_MODE;
+	ServoUp();
 }
 
 void
