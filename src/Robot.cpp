@@ -36,6 +36,7 @@ public:
 	Claw *claw;
 	Climber *climb;
 	Solenoid *climbPiston;
+	Servo *cameraServo;
 	Target *targeter;
 	cv::Rect r1, r2;
     	int startPosition;
@@ -52,6 +53,8 @@ public:
 		climbMotor  = new CANTalon(CLIMB_MOTOR);
 		climbPiston = new Solenoid(PCM_ID, CLIMB_SOLENOID);
 		targeter 	= new Target(FRONT_CAMERA, REAR_CAMERA);
+		
+		cameraServo = new Servo(CAMERASERVO);
 
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
@@ -210,6 +213,7 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
+		cameraServo->Set(0);
 	}
 
 	void
