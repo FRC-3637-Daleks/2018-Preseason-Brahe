@@ -20,6 +20,9 @@ enum DigitalIO   { GEAR_SWITCH = 1, DRUM_SWITCH, CLIMB_SWITCH = 4 };
 // Compressor
 #define PCM_ID 14
 
+// Servo
+#define CAMERASERVO 0
+
 #define ENCODER_TICKS_PER_REV 360
 #define WHEEL_DIAMETER_INCHES 6.0
 #define AT_WHEEL_RATIO (26.0/22.0)
