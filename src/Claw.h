@@ -30,6 +30,8 @@ public:
 	void DeployMode();
 	void GroundMode();
 	void TravelMode();
+	void ServoUp();
+	void ServoDown();
 	bool IsOpen();
 	bool IsClosed();
 	void CheckForGear();
@@ -41,6 +43,7 @@ private:
 	Solenoid *m_arm;
 	DigitalInput *m_gearSwitch;
 	DigitalInput *m_pegSwitch;
+	Servo *m_cameraServo;
 	PistonState m_state;
 	bool m_needFree;
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
