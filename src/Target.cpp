@@ -18,7 +18,7 @@ Target::Target(int cam0, int cam1)
 	m_resX = RESOLUTION_X;
 	m_resY = RESOLUTION_Y;
 
-	m_usbCamera0  = new cs::UsbCamera("USB Camera 0", 0);
+	m_usbCamera0  = new cs::UsbCamera("USB Camera 0", cam0);
 	m_usbCamera0->SetExposureManual(.5);
 	if(m_usbCamera0) {
 		m_mjpegServer = new cs::MjpegServer("serve_USB Camera 0", 1181);
@@ -27,7 +27,9 @@ Target::Target(int cam0, int cam1)
 		m_cvSink->SetSource(*m_usbCamera0);
 		m_isCam0 = true;
 	}
-	m_usbCamera1 = new cs::UsbCamera("USB Camera 1", 1);
+	else
+		m_isCam0 = false;
+	m_usbCamera1 = new cs::UsbCamera("USB Camera 1", cam1);
 	m_cvSource  = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
 }
 
@@ -35,17 +37,16 @@ void
 Target::processFrame()
 {
 	std::vector<std::vector<cv::Point>> *dContours;
-	cv::Mat source;
 	cv::Rect r;
 	float ratio;
 	int x, max;
 
 	// if not on camera 0, then skip frame processing
-	if(!m_isCam0)
+	if(m_isCam0)
 		return;
 
-	if(m_cvSink->GrabFrame(source)) {
-		m_gp.process(source);
+	if(m_cvSink->GrabFrame(m_source)) {
+		m_gp.process(m_source);
 		max = 0;
 		dContours = m_gp.getfindContoursOutput();
 		m_r1 = m_nullR;
@@ -67,16 +68,16 @@ Target::processFrame()
 				}
 				i++;
 			}
-			cv::rectangle(source, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
-			cv::rectangle(source, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
+			cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
+			cv::rectangle(m_source, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
 
 		}
 		else if(dContours->size() == 1) {
 			m_r1 = boundingRect(dContours->at(0));
-			cv::rectangle(source, m_r1, cv::Scalar(225,0,0), 1, 8, 0);
+			cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 1, 8, 0);
 		}
 		frc::SmartDashboard::PutNumber("Contours", dContours->size());
-		m_cvSource.PutFrame(source);
+		m_cvSource.PutFrame(m_source);
 	}
 	return;
 }

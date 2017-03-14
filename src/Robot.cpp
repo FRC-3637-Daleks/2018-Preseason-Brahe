@@ -94,7 +94,7 @@ public:
 	void
 	AutonomousPeriodic()
 	{
-        static double target_acquisition_distance = 6720; // ~4.6 ft
+        static double target_acquisition_distance = 3000; // ~4.6 ft
         static double backup_distance;
         static bool target_acquired = false;
         double ldist, rdist, distance;
@@ -106,7 +106,7 @@ public:
         distance = (ldist >  rdist) ? ldist : rdist;
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
         targeter->switchCam(FRONT_CAMERA);
-	targeter->processFrame();
+        targeter->processFrame();
         targetAngle = targeter->targetAngle();
         targetDistance = targeter->targetDistance();
         if(autoStage == 0) {
@@ -115,7 +115,7 @@ public:
             // way that 60" travel is sufficient distance to get where
             // can find the target
             if (distance < target_acquisition_distance)
-                d->SetLeftRightMotorOutputs(-0.45, -0.5);
+                d->SetLeftRightMotorOutputs(-0.5, -0.5);
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
                 autoStage = 1;
@@ -191,12 +191,12 @@ public:
             claw->OpenClaw();
             Wait(0.1);
             d->SetLeftRightMotorOutputs(0.25, 0.25);
-            backup_distance = distance - 915;
+            backup_distance = distance - 2000;
             autoStage = 4;
         }
         else if(autoStage == 4) {
             // backup from the peg for about a foot
-            if(backup_distance > distance)
+            if(distance > backup_distance)
                 d->SetLeftRightMotorOutputs(0.25, 0.25);
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -274,19 +274,18 @@ public:
 			climb->Stop();
 
 		// Camera controls
-		/*if((xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand)) ||
+		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand)) ||
 		   (leftJoystick->GetTop())) {
-			targeter->switchCam0();
+			targeter->switchCam(FRONT_CAMERA);
 		}
 		
 		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kLeftHand)) ||
 		   (rightJoystick->GetTop())) {
-			targeter->switchCam1();
-		}*/
+			targeter->switchCam(REAR_CAMERA);
+		}
 
 		targeter->processFrame();
-		//r1 = targeter->getR1();
-		//r2 = targeter->getR2();
+
 		++teleopCnt;
 		if((teleopCnt % 10) == 0)
 			DashboardUpdates();
@@ -317,17 +316,6 @@ public:
 		frc::SmartDashboard::PutBoolean("Drum Switch", climb->IsIndexed());
 		frc::SmartDashboard::PutBoolean("Claw Open", claw->IsOpen());
 		frc::SmartDashboard::PutBoolean("At Top", climb->IsAtTop());
-		/*frc::SmartDashboard::PutNumber("Contour 1X", r1.br().x-r1.width);
-		frc::SmartDashboard::PutNumber("Contour 1Y", r1.br().y-r1.height);
-		frc::SmartDashboard::PutNumber("Contour 2X", r2.br().x-r2.width);
-		frc::SmartDashboard::PutNumber("Contour 2Y", r2.br().y-r2.height);
-		frc::SmartDashboard::PutBoolean("cam0", isCam0);
-		if(r1.br().x-(r1.width/2) + r2.br().x-(r2.width/2) / 2 < 180){
-			frc::SmartDashboard::PutString("Direction", "Go Left");
-		}
-		else{
-			frc::SmartDashboard::PutString("Direction", "Go Right");
-		}*/
 	}
 
 private:

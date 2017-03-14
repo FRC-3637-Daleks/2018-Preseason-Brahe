@@ -41,7 +41,7 @@ private:
 	cs::MjpegServer *m_mjpegServer;
 	cs::CvSource m_cvSource;
 	cv::Rect m_r1, m_r2;
-
+	cv::Mat m_source;
 	trackingState_t m_state;
 	cv::Rect m_nullR;
 	cs::VideoSource m_nullV;
