@@ -283,6 +283,8 @@ public:
 		}
 
 		targeter->processFrame();
+		r1 = targeter->getR1();
+		r2 = targeter->getR2();
 
 		++teleopCnt;
 		if((teleopCnt % 10) == 0)
