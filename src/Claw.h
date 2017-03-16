@@ -20,7 +20,6 @@ public:
 	Claw(int piston, int pivot, int arms, int gearSwitch, int cameraServo);
 	Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm, int gearSwitch, int cameraServo);
 	Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm, int gearSwtich, int cameraServo);
-	Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm, int gearSwitch, int cameraServo);
 	void ExtendPiston();
 	void RetractPiston();
 	void OpenClaw();
