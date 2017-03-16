@@ -10,26 +10,25 @@
 Target::Target(int cam0, int cam1)
 {
 	m_state = SEARCHING;
-	m_distance = 0.0;
-	m_angle = 0.0;
+	m_distance     = 0.0;
+	m_angle        = 0.0;
 	m_target_width = TARGET_WIDTH;
-	m_fovH = FOV_H;
-	m_fovV = FOV_V;
-	m_resX = RESOLUTION_X;
-	m_resY = RESOLUTION_Y;
+	m_fovH         = FOV_H;
+	m_fovV         = FOV_V;
+	m_resX         = RESOLUTION_X;
+	m_resY         = RESOLUTION_Y;
+	m_isCam0       = false;
+	m_usbCamera0   = new cs::UsbCamera("USB Camera 0", cam0);
+	m_usbCamera1   = new cs::UsbCamera("USB Camera 1", cam1);
+	m_mjpegServer  = new cs::MjpegServer("serve_USB Camera 0", 1181);
+	m_cvSink       = new cs::CvSink("opencv_USB Camera 0");
 
-	m_usbCamera0  = new cs::UsbCamera("USB Camera 0", cam0);
 	m_usbCamera0->SetExposureManual(.5);
 	if(m_usbCamera0) {
-		m_mjpegServer = new cs::MjpegServer("serve_USB Camera 0", 1181);
-		m_cvSink      = new cs::CvSink("opencv_USB Camera 0");
 		m_mjpegServer->SetSource(*m_usbCamera0);
 		m_cvSink->SetSource(*m_usbCamera0);
 		m_isCam0 = true;
 	}
-	else
-		m_isCam0 = false;
-	m_usbCamera1 = new cs::UsbCamera("USB Camera 1", cam1);
 	m_cvSource  = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
 }
 

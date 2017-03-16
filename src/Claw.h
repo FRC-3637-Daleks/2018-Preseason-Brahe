@@ -20,6 +20,7 @@ public:
 	Claw(int piston, int pivot, int arms, int gearSwitch, int cameraServo);
 	Claw(Solenoid *piston, Solenoid *pivot, Solenoid *arm, int gearSwitch, int cameraServo);
 	Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm, int gearSwtich, int cameraServo);
+	Claw(Solenoid &piston, Solenoid &pivot, Solenoid &arm, int gearSwitch, int cameraServo);
 	void ExtendPiston();
 	void RetractPiston();
 	void OpenClaw();
@@ -30,7 +31,7 @@ public:
 	void DeployMode();
 	void GroundMode();
 	void TravelMode();
-	void ServoUp();
+	void SetCameraView(double angle);
 	void ServoDown();
 	bool IsOpen();
 	bool IsClosed();

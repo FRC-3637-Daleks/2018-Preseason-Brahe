@@ -16,12 +16,14 @@ enum Cameras	 { FRONT_CAMERA = 0, REAR_CAMERA, NUM_CAMERAS };
 enum Gears       { LOW_GEAR, HIGH_GEAR, NUM_GEARS };
 enum Solenoids	 { ARM_SOLENOID, PIVOT_SOLENOID, PISTON_SOLENOID, CLIMB_SOLENOID, SHIFTER_SOLENOID };
 enum DigitalIO   { GEAR_SWITCH = 1, DRUM_SWITCH, CLIMB_SWITCH = 4 };
+enum PWMs		 { CAMERA_SERVO = 0 };
 
 // Compressor
 #define PCM_ID 14
 
-// Servo
-#define CAMERASERVO 0
+// Camera servo positions
+#define FRONT_VIEW_POSITION 0
+#define GROUND_VIEW_POSITION 0
 
 #define ENCODER_TICKS_PER_REV 360
 #define WHEEL_DIAMETER_INCHES 6.0

@@ -36,43 +36,39 @@ public:
 	Claw *claw;
 	Climber *climb;
 	Solenoid *climbPiston;
-	Servo *cameraServo;
 	Target *targeter;
 	cv::Rect r1, r2;
-    	int startPosition;
+    int startPosition;
    	int autoStage;
     	
 
 	void
 	RobotInit()
 	{
-		leftMotor   = new CANTalon(LEFT_DRIVEMOTOR);
-		leftSlave   = new CANTalon(LEFT_SLAVEMOTOR);
-		rightMotor  = new CANTalon(RIGHT_DRIVEMOTOR);
-		rightSlave  = new CANTalon(RIGHT_SLAVEMOTOR);
-		climbMotor  = new CANTalon(CLIMB_MOTOR);
-		climbPiston = new Solenoid(PCM_ID, CLIMB_SOLENOID);
-		targeter 	= new Target(FRONT_CAMERA, REAR_CAMERA);
-		
-		cameraServo = new Servo(CAMERASERVO);
-
+		leftMotor     = new CANTalon(LEFT_DRIVEMOTOR);
+		leftSlave     = new CANTalon(LEFT_SLAVEMOTOR);
+		rightMotor    = new CANTalon(RIGHT_DRIVEMOTOR);
+		rightSlave    = new CANTalon(RIGHT_SLAVEMOTOR);
+		climbMotor    = new CANTalon(CLIMB_MOTOR);
+		climbPiston   = new Solenoid(PCM_ID, CLIMB_SOLENOID);
+		targeter 	  = new Target(FRONT_CAMERA, REAR_CAMERA);
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
 		c             = new Compressor(PCM_ID);
 		d             = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER_SOLENOID);
-		claw          = new Claw(PISTON_SOLENOID, PIVOT_SOLENOID, ARM_SOLENOID, GEAR_SWITCH);
+		claw          = new Claw(PISTON_SOLENOID, PIVOT_SOLENOID, ARM_SOLENOID, GEAR_SWITCH, CAMERA_SERVO);
 		climb         = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
 	}
 
 	void
-	DisableInit()
+	DisabledInit()
 	{
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
 	}
 
 	void
-	DisablePeriodic()
+	DisabledPeriodic()
 	{
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
 	}
@@ -89,12 +85,13 @@ public:
 		leftMotor->SetPosition(0);
 		rightMotor->SetPosition(0);
 		d->ShiftGear(HIGH_GEAR);
+        targeter->switchCam(FRONT_CAMERA);
 	}
 
 	void
 	AutonomousPeriodic()
 	{
-        static double target_acquisition_distance = 3000; // ~4.6 ft
+        static double target_acquisition_distance = 2900; // ~3.5 ft
         static double backup_distance;
         static bool target_acquired = false;
         double ldist, rdist, distance;
@@ -105,10 +102,12 @@ public:
         rdist = abs(rightMotor->GetEncPosition());
         distance = (ldist >  rdist) ? ldist : rdist;
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
-        targeter->switchCam(FRONT_CAMERA);
+
+        // get current targeting data
         targeter->processFrame();
         targetAngle = targeter->targetAngle();
         targetDistance = targeter->targetDistance();
+
         if(autoStage == 0) {
             // initial start stage - move to target acquisition point
             // for now we will assume that we are oriented in such a
@@ -213,7 +212,6 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
-		cameraServo->Set(0);
 	}
 
 	void
