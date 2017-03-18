@@ -206,7 +206,7 @@ public:
             }
         }
         else
-		d->SetLeftRightMotorOutputs(0.0, 0.0);
+        	d->SetLeftRightMotorOutputs(0.0, 0.0);
     	}
 
 	void
