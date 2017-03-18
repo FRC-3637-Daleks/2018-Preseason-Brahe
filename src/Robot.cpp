@@ -9,12 +9,6 @@
 #include <SmartDashboard/SendableChooser.h>
 #include <SmartDashboard/SmartDashboard.h>
 
-#include <opencv2/objdetect/objdetect.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/Features2d.hpp>
-
 #include <WPILib.h>
 #include <CANTalon.h>
 #include <Brahe.h>
@@ -36,6 +30,7 @@ public:
 	Claw *claw;
 	Climber *climb;
 	Solenoid *climbPiston;
+	Relay *lightswitch;
 	Target *targeter;
 	cv::Rect r1, r2;
     int startPosition;
@@ -56,9 +51,17 @@ public:
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
 		c             = new Compressor(PCM_ID);
+		lightswitch   = new Relay(LIGHT_SWITCH);
 		d             = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER_SOLENOID);
 		claw          = new Claw(PISTON_SOLENOID, PIVOT_SOLENOID, ARM_SOLENOID, GEAR_SWITCH, CAMERA_SERVO);
 		climb         = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
+
+		lw->AddActuator("lightswitch", "lightswitch", lightswitch);
+	}
+
+	void
+	RobotPeriodic()
+	{
 	}
 
 	void
@@ -85,6 +88,7 @@ public:
 		leftMotor->SetPosition(0);
 		rightMotor->SetPosition(0);
 		d->ShiftGear(HIGH_GEAR);
+		lightswitch->Set(Relay::kForward);
         targeter->switchCam(FRONT_CAMERA);
 	}
 
@@ -104,7 +108,6 @@ public:
         frc::SmartDashboard::PutNumber("Distance traveled", distance);
 
         // get current targeting data
-        targeter->processFrame();
         targetAngle = targeter->targetAngle();
         targetDistance = targeter->targetDistance();
 
@@ -212,6 +215,7 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
+		lightswitch->Set(Relay::kReverse);
 	}
 
 	void
@@ -282,8 +286,6 @@ public:
 			targeter->switchCam(REAR_CAMERA);
 		}
 
-		targeter->processFrame();
-
 		++teleopCnt;
 		if((teleopCnt % 10) == 0)
 			DashboardUpdates();
@@ -294,8 +296,6 @@ public:
 	{
 		c->Start();
 		claw->TravelMode();
-		d->SetLeftRightMotorOutputs(0.0, 0.0);
-
 	}
 
 	void

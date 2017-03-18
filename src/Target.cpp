@@ -23,13 +23,14 @@ Target::Target(int cam0, int cam1)
 	m_mjpegServer  = new cs::MjpegServer("serve_USB Camera 0", 1181);
 	m_cvSink       = new cs::CvSink("opencv_USB Camera 0");
 
-	m_usbCamera0->SetExposureManual(.5);
+	// m_usbCamera0->SetExposureManual(.5);
 	if(m_usbCamera0) {
 		m_mjpegServer->SetSource(*m_usbCamera0);
 		m_cvSink->SetSource(*m_usbCamera0);
 		m_isCam0 = true;
 	}
 	m_cvSource  = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
+	return;
 }
 
 void
@@ -41,7 +42,7 @@ Target::processFrame()
 	int x, max;
 
 	// if not on camera 0, then skip frame processing
-	if(m_isCam0)
+	// if(m_isCam0)
 		return;
 
 	if(m_cvSink->GrabFrame(m_source)) {
@@ -106,20 +107,39 @@ Target::switchCam(enum Cameras cam)
 		default:
 			break;
 	}
+	return;
 }
 
 double
 Target::targetAngle()
 {
-	if(m_r1.height != 0)
-		return acos((5 * m_r1.width) / (2 * m_r1.height));
+	switch(m_state) {
+		case SEARCHING:
+		case AQUIRED:
+			return 0.0;
+		case TRACKING:
+			if(m_r1.height != 0)
+				return acos((5 * m_r1.width) / (2 * m_r1.height));
+			return 0.0;
+		default:
+			break;
+	}
 	return 0.0;
 }
 
 double
 Target::targetDistance()
 {
-	return ((5 * m_target_width * m_resX) / (4 * m_r1.width * tan(m_fovH / 2)));
+	switch(m_state) {
+		case SEARCHING:
+		case AQUIRED:
+			return 0.0;
+		case TRACKING:
+			return ((5 * m_target_width * m_resX) / (4 * m_r1.width * tan(m_fovH / 2)));
+		default:
+			break;
+	}
+	return 0.0;
 }
 
 cv::Rect

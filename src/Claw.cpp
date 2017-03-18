@@ -115,7 +115,7 @@ Claw::CloseClaw()
 void
 Claw::SetCameraView(double angle)
 {
-	m_cameraServo->SetAngle(angle);
+	m_cameraServo->Set(angle);
 }
 
 bool
