@@ -46,35 +46,37 @@ Target::processFrame()
 		return;
 
 	if(m_cvSink->GrabFrame(m_source)) {
-		m_gp.process(m_source);
-		max = 0;
-		dContours = m_gp.getfindContoursOutput();
-		m_r1 = m_nullR;
-		m_r2 = m_nullR;
-		if(dContours->size() > 1) {
-			unsigned int i = 0;
-			while(i < dContours->size()) {
-				r = boundingRect(dContours->at(i));
-				x = r.br().x - (r.width/2);
-				ratio = r.height/r.width;
-				ratio = (fabs(ratio) - 2.5)/2.5;
-				if(ratio <= .2) {
-					if(x > max) {
-						m_r1 = r;
-						max = x;
+		if (m_isCam0){
+			m_gp.process(m_source);
+			max = 0;
+			dContours = m_gp.getfindContoursOutput();
+			m_r1 = m_nullR;
+			m_r2 = m_nullR;
+			if(dContours->size() > 1) {
+				unsigned int i = 0;
+				while(i < dContours->size()) {
+					r = boundingRect(dContours->at(i));
+					x = r.br().x - (r.width/2);
+					ratio = r.height/r.width;
+					ratio = (fabs(ratio) - 2.5)/2.5;
+					if(ratio <= .2) {
+						if(x > max) {
+							m_r1 = r;
+							max = x;
+						}
+						else
+							m_r2 = r;
 					}
-					else
-						m_r2 = r;
+					i++;
 				}
-				i++;
-			}
-			cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
-			cv::rectangle(m_source, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
+				cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
+				cv::rectangle(m_source, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
 
-		}
-		else if(dContours->size() == 1) {
-			m_r1 = boundingRect(dContours->at(0));
-			cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 1, 8, 0);
+			}
+			else if(dContours->size() == 1) {
+				m_r1 = boundingRect(dContours->at(0));
+				cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 1, 8, 0);
+			}
 		}
 		frc::SmartDashboard::PutNumber("Contours", dContours->size());
 		m_cvSource.PutFrame(m_source);

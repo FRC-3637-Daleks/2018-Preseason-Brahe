@@ -33,7 +33,7 @@ public:
 	Relay *lightswitch;
 	Target *targeter;
 	cv::Rect r1, r2;
-    int startPosition;
+	int startPosition;
    	int autoStage;
     	
 
@@ -46,7 +46,7 @@ public:
 		rightSlave    = new CANTalon(RIGHT_SLAVEMOTOR);
 		climbMotor    = new CANTalon(CLIMB_MOTOR);
 		climbPiston   = new Solenoid(PCM_ID, CLIMB_SOLENOID);
-		targeter 	  = new Target(FRONT_CAMERA, REAR_CAMERA);
+		targeter      = new Target(FRONT_CAMERA, REAR_CAMERA);
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
@@ -79,9 +79,9 @@ public:
 	void
 	AutonomousInit()
 	{
-        // get autonomous start position
-        startPosition = 1;
-        autoStage = 0;
+	        // get autonomous start position
+		startPosition = 1;
+		autoStage = 0;
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -206,8 +206,8 @@ public:
             }
         }
         else
-            d->SetLeftRightMotorOutputs(0.0, 0.0);
-    }
+		d->SetLeftRightMotorOutputs(0.0, 0.0);
+    	}
 
 	void
 	TeleopInit()
