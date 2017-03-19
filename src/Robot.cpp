@@ -88,14 +88,14 @@ public:
 		leftMotor->SetPosition(0);
 		rightMotor->SetPosition(0);
 		d->ShiftGear(HIGH_GEAR);
-		lightswitch->Set(Relay::kForward);
+		lightswitch->Set(Relay::kReverse);
         targeter->switchCam(FRONT_CAMERA);
 	}
 
 	void
 	AutonomousPeriodic()
 	{
-        static double target_acquisition_distance = 2900; // ~3.5 ft
+        static double target_acquisition_distance = 10600; // ~3.5 ft
         static double backup_distance;
         static bool target_acquired = false;
         double ldist, rdist, distance;
@@ -120,7 +120,7 @@ public:
                 d->SetLeftRightMotorOutputs(-0.5, -0.5);
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
-                autoStage = 1;
+                autoStage = 5; // HACK stop after forward motion
             }
         }
         else if(autoStage == 1) {
@@ -215,14 +215,13 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
-		lightswitch->Set(Relay::kReverse);
+		lightswitch->Set(Relay::kForward);
 	}
 
 	void
 	TeleopPeriodic()
 	{
 		static bool sawButtonRelease = true;
-		static cs::VideoSource nullV;
 		static long teleopCnt;
 		bool useArcade, toggleClaw;
 		double climbvalue;
@@ -285,6 +284,11 @@ public:
 		   (rightJoystick->GetTop())) {
 			targeter->switchCam(REAR_CAMERA);
 		}
+
+		if(leftJoystick->GetRawButton(2))
+			claw->SetCameraView(GROUND_VIEW_POSITION);
+		if(rightJoystick->GetRawButton(2))
+			claw->SetCameraView(FRONT_VIEW_POSITION);
 
 		++teleopCnt;
 		if((teleopCnt % 10) == 0)
