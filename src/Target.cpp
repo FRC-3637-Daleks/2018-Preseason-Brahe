@@ -9,7 +9,7 @@
 
 Target::Target(int cam0, int cam1)
 {
-	m_state = SEARCHING;
+	m_state        = SEARCHING;
 	m_distance     = 0.0;
 	m_angle        = 0.0;
 	m_target_width = TARGET_WIDTH;
@@ -17,20 +17,52 @@ Target::Target(int cam0, int cam1)
 	m_fovV         = FOV_V;
 	m_resX         = RESOLUTION_X;
 	m_resY         = RESOLUTION_Y;
-	m_isCam0       = false;
-	m_usbCamera0   = new cs::UsbCamera("USB Camera 0", cam0);
-	m_usbCamera1   = new cs::UsbCamera("USB Camera 1", cam1);
-	m_mjpegServer  = new cs::MjpegServer("serve_USB Camera 0", 1181);
-	m_cvSink       = new cs::CvSink("opencv_USB Camera 0");
+	m_cam0		   = cam0;
+	m_cam1		   = cam1;
+	m_feed         = FRONT_CAMERA;
 
-	// m_usbCamera0->SetExposureManual(.5);
-	if(m_usbCamera0) {
-		m_mjpegServer->SetSource(*m_usbCamera0);
-		m_cvSink->SetSource(*m_usbCamera0);
-		m_isCam0 = true;
-	}
-	m_cvSource  = CameraServer::GetInstance()->PutVideo("Output", 320, 240);
+	std::thread m_eyes(visionThread, (void *)this);
+	m_eyes.detach();
+
 	return;
+}
+
+void
+Target::visionThread(void *t)
+{
+	Target *myt = (Target *)t;
+	cs::VideoSink server;
+
+    cs::UsbCamera camera0 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam0);
+    cs::UsbCamera camera1 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam1);
+    camera0.SetResolution(320, 480);
+    camera1.SetResolution(320, 480);
+
+    server = CameraServer::GetInstance()->GetServer();
+	cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+    cs::CvSource outputStreamRear  = CameraServer::GetInstance()->PutVideo("Rear", 320, 480);
+    cs::CvSource outputStreamFront = CameraServer::GetInstance()->PutVideo("Front", 320, 480);
+
+    while(true) {
+    	switch(myt->m_feed) {
+    	case FRONT_CAMERA:
+    		server.SetSource(camera0);
+    		break;
+    	case REAR_CAMERA:
+    		server.SetSource(camera1);
+    		break;
+    	default:
+    		break;
+    	}
+		cvSink.GrabFrame(myt->m_source);
+    	if(myt->m_feed == FRONT_CAMERA) {
+    		myt->processFrame();
+    		outputStreamFront.PutFrame(myt->m_source);
+    	}
+    	else {
+    		outputStreamRear.PutFrame(myt->m_source);
+    	}
+    }
 }
 
 void
@@ -40,75 +72,44 @@ Target::processFrame()
 	cv::Rect r;
 	float ratio;
 	int x, max;
+	cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 
-	// if not on camera 0, then skip frame processing
-	// if(m_isCam0)
-		return;
-
-	if(m_cvSink->GrabFrame(m_source)) {
-		if (m_isCam0){
-			m_gp.process(m_source);
-			max = 0;
-			dContours = m_gp.getfindContoursOutput();
-			m_r1 = m_nullR;
-			m_r2 = m_nullR;
-			if(dContours->size() > 1) {
-				unsigned int i = 0;
-				while(i < dContours->size()) {
-					r = boundingRect(dContours->at(i));
-					x = r.br().x - (r.width/2);
-					ratio = r.height/r.width;
-					ratio = (fabs(ratio) - 2.5)/2.5;
-					if(ratio <= .2) {
-						if(x > max) {
-							m_r1 = r;
-							max = x;
-						}
-						else
-							m_r2 = r;
-					}
-					i++;
+	max = 0; m_r1 = m_nullR; m_r2 = m_nullR;
+	m_gp.process(m_source);
+	dContours = m_gp.getfindContoursOutput();
+	if(dContours->size() > 1) {
+		unsigned int i = 0;
+		while(i < dContours->size()) {
+			r = boundingRect(dContours->at(i));
+			x = r.br().x - (r.width/2);
+			ratio = r.height/r.width;
+			ratio = (fabs(ratio) - 2.5)/2.5;
+			if(ratio <= .2) {
+				if(x > max) {
+					m_r1 = r;
+					max = x;
 				}
-				cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
-				cv::rectangle(m_source, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
-
+				else
+					m_r2 = r;
 			}
-			else if(dContours->size() == 1) {
-				m_r1 = boundingRect(dContours->at(0));
-				cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 1, 8, 0);
-			}
+			i++;
 		}
-		frc::SmartDashboard::PutNumber("Contours", dContours->size());
-		m_cvSource.PutFrame(m_source);
+		cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
+		cv::rectangle(m_source, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
 	}
+	else if(dContours->size() == 1) {
+		m_r1 = boundingRect(dContours->at(0));
+		cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 1, 8, 0);
+	}
+
+	frc::SmartDashboard::PutNumber("Contours", dContours->size());
 	return;
 }
 
 void
 Target::switchCam(enum Cameras cam)
 {
-	switch(cam) {
-		case FRONT_CAMERA:
-			if(m_usbCamera0) {
-				m_mjpegServer->SetSource(m_nullV);
-				m_cvSink->SetSource(m_nullV);
-				m_mjpegServer->SetSource(*m_usbCamera0);
-				m_cvSink->SetSource(*m_usbCamera0);
-				m_isCam0 = true;
-			}
-			break;
-		case REAR_CAMERA:
-			if(m_usbCamera1) {
-				m_mjpegServer->SetSource(m_nullV);
-				m_cvSink->SetSource(m_nullV);
-				m_mjpegServer->SetSource(*m_usbCamera1);
-				m_cvSink->SetSource(*m_usbCamera1);
-				m_isCam0 = false;
-			}
-			break;
-		default:
-			break;
-	}
+	m_feed = cam;
 	return;
 }
 

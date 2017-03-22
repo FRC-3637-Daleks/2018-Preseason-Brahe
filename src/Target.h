@@ -22,7 +22,6 @@
 
 class Target {
 public:
-
 	typedef enum trackState { SEARCHING, AQUIRED, TRACKING } trackingState_t ;
 	Target(int cam0, int cam1);
 	void processFrame();
@@ -36,20 +35,17 @@ public:
 	cv::Rect getR2();
 
 private:
-	cs::UsbCamera *m_usbCamera0, *m_usbCamera1;
-	cs::CvSink *m_cvSink;
-	cs::MjpegServer *m_mjpegServer;
-	cs::CvSource m_cvSource;
 	cv::Rect m_r1, m_r2;
+	cv::Rect m_nullR;
 	cv::Mat m_source;
 	trackingState_t m_state;
-	cv::Rect m_nullR;
-	cs::VideoSource m_nullV;
 	int m_resX, m_resY, m_target_width;
+	int m_cam0, m_cam1;
 	double m_fovV, m_fovH;
 	double m_distance;
 	double m_angle;
 	double m_frame[4];
-	bool m_isCam0;
+	enum Cameras m_feed;
+	static void visionThread(void *t);
 	grip::GripPipeline m_gp;
 };
