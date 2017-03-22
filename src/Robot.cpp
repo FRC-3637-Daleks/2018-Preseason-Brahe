@@ -88,7 +88,7 @@ public:
 		leftMotor->SetPosition(0);
 		rightMotor->SetPosition(0);
 		d->ShiftGear(HIGH_GEAR);
-		lightswitch->Set(Relay::kReverse);
+		lightswitch->Set(Relay::kForward);
         targeter->switchCam(FRONT_CAMERA);
 	}
 
@@ -215,7 +215,7 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
-		lightswitch->Set(Relay::kForward);
+		lightswitch->Set(Relay::kReverse);
 	}
 
 	void
@@ -270,7 +270,7 @@ public:
 			climb->ReleaseRope();
 
 		if(climbvalue > 0.3)
-			climb->ClimbRope(0.9);
+			climb->ClimbRope();
 		else
 			climb->Stop();
 
