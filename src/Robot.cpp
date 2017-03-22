@@ -24,7 +24,7 @@ public:
 	Compressor *c;
 	CANTalon *leftMotor, *rightMotor, *leftSlave, *rightSlave;
 	CANTalon *climbMotor;
-	Joystick *leftJoystick, *rightJoystick;
+	// Joystick *leftJoystick, *rightJoystick;
 	XboxController *xbox;
 	DalekDrive *d;
 	Claw *claw;
@@ -47,8 +47,8 @@ public:
 		climbMotor    = new CANTalon(CLIMB_MOTOR);
 		climbPiston   = new Solenoid(PCM_ID, CLIMB_SOLENOID);
 		targeter      = new Target(FRONT_CAMERA, REAR_CAMERA);
-		leftJoystick  = new Joystick(LEFT_JOYSTICK);
-		rightJoystick = new Joystick(RIGHT_JOYSTICK);
+		// leftJoystick  = new Joystick(LEFT_JOYSTICK);
+		// rightJoystick = new Joystick(RIGHT_JOYSTICK);
 		xbox          = new XboxController(XBOX_CONTROLS);
 		c             = new Compressor(PCM_ID);
 		lightswitch   = new Relay(LIGHT_SWITCH);
@@ -79,7 +79,7 @@ public:
 	void
 	AutonomousInit()
 	{
-	        // get autonomous start position
+	    // TBD: get autonomous start position
 		startPosition = 1;
 		autoStage = 0;
 		c->Start();
@@ -223,21 +223,22 @@ public:
 	{
 		static bool sawButtonRelease = true;
 		static long teleopCnt;
-		bool useArcade, toggleClaw;
+		bool /*useArcade,*/ toggleClaw;
 		double climbvalue;
 
-		useArcade = (leftJoystick->GetZ() == -1.0);
+		// useArcade = (leftJoystick->GetZ() == -1.0);
 
 		// Drive controls
-		if (useArcade)
-			d->ArcadeDrive(leftJoystick);
-		else
-			d->TankDrive(leftJoystick, rightJoystick);
+		// if (useArcade)
+		d->ArcadeDrive(xbox->GetX(frc::GenericHID::JoystickHand::kRightHand),
+					xbox->GetY(frc::GenericHID::JoystickHand::kRightHand));
+		//else
+		//	d->TankDrive(leftJoystick, rightJoystick);
 
-		if(leftJoystick->GetTrigger())
-			d->ShiftGear(LOW_GEAR);
-		if(rightJoystick->GetTrigger())
-			d->ShiftGear(HIGH_GEAR);
+		// if(leftJoystick->GetTrigger())
+		//	d->ShiftGear(LOW_GEAR);
+		// if(rightJoystick->GetTrigger())
+		//	d->ShiftGear(HIGH_GEAR);
 
 		// Gear controls
 		if(xbox->GetAButton())
@@ -275,20 +276,16 @@ public:
 			climb->Stop();
 
 		// Camera controls
-		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand)) ||
-		   (leftJoystick->GetTop())) {
+		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kRightHand)))
 			targeter->switchCam(FRONT_CAMERA);
-		}
-		
-		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kLeftHand)) ||
-		   (rightJoystick->GetTop())) {
-			targeter->switchCam(REAR_CAMERA);
-		}
 
-		if(leftJoystick->GetRawButton(2))
-			claw->SetCameraView(GROUND_VIEW_POSITION);
-		if(rightJoystick->GetRawButton(2))
-			claw->SetCameraView(FRONT_VIEW_POSITION);
+		if((xbox->GetBumper(frc::GenericHID::JoystickHand::kLeftHand)))
+			targeter->switchCam(REAR_CAMERA);
+
+		// if(leftJoystick->GetRawButton(2))
+		//	claw->SetCameraView(GROUND_VIEW_POSITION);
+		// if(rightJoystick->GetRawButton(2))
+		//	claw->SetCameraView(FRONT_VIEW_POSITION);
 
 		++teleopCnt;
 		if((teleopCnt % 10) == 0)
