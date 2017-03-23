@@ -93,7 +93,6 @@ Climber::ClimbRope()
 {
 	if(m_state == AT_TOP)
 		return;
-
 	m_state = CLIMBING;
 	return;
 }
@@ -101,9 +100,6 @@ Climber::ClimbRope()
 void
 Climber::MoveToIndex()
 {
-	if(m_state == INDEXED)
-		return;
-
 	m_state = INDEXING;
 	return;
 }
@@ -123,7 +119,10 @@ Climber::IsAtTop()
 void
 Climber::Stop()
 {
-	m_state = STOP;
+	if(m_state == INDEXING)
+		return;
+	m_state = INDEXED;
+	m_climb->Set(0);
 }
 
 void
@@ -132,6 +131,7 @@ Climber::climbIndexer(void *c)
 	Climber *climb = (Climber *)c;
 
 	while(true) {
+		frc::SmartDashboard::PutNumber("Current Climb State", climb->m_state);
 		switch(climb->m_state) {
 			case INDEXING:
 				if(!climb->IsIndexed())
@@ -139,6 +139,7 @@ Climber::climbIndexer(void *c)
 				else {
 					climb->m_state = INDEXED;
 					climb->m_climb->Set(0);
+					climb->GrabRope();
 				}
 				break;
 
@@ -158,5 +159,6 @@ Climber::climbIndexer(void *c)
 			default:
 				break;
 		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 	}
 }
