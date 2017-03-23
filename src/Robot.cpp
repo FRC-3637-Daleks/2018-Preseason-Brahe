@@ -230,8 +230,10 @@ public:
 
 		// Drive controls
 		// if (useArcade)
-		d->ArcadeDrive(xbox->GetX(frc::GenericHID::JoystickHand::kRightHand),
-					xbox->GetY(frc::GenericHID::JoystickHand::kRightHand));
+		double x = xbox->GetX(frc::GenericHID::JoystickHand::kRightHand);
+		double y = xbox->GetY(frc::GenericHID::JoystickHand::kRightHand);
+		d->ArcadeDrive(y,x);
+
 		//else
 		//	d->TankDrive(leftJoystick, rightJoystick);
 
