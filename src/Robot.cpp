@@ -88,7 +88,7 @@ public:
 		leftMotor->SetPosition(0);
 		rightMotor->SetPosition(0);
 		d->ShiftGear(HIGH_GEAR);
-		lightswitch->Set(Relay::kForward);
+		lightswitch->Set(Relay::kReverse);
         targeter->switchCam(FRONT_CAMERA);
 	}
 
@@ -215,7 +215,7 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
-		lightswitch->Set(Relay::kReverse);
+		lightswitch->Set(Relay::kForward);
 	}
 
 	void
@@ -261,7 +261,7 @@ public:
 			sawButtonRelease = true;
 
 		// Climber controls
-		climbvalue = fabs(xbox->GetY(frc::GenericHID::JoystickHand::kLeftHand));
+
 		if(xbox->GetStartButton()) {
 			climb->MoveToIndex();
 			climb->GrabRope();
@@ -269,6 +269,7 @@ public:
 		if(xbox->GetBackButton())
 			climb->ReleaseRope();
 
+		climbvalue = fabs(xbox->GetY(frc::GenericHID::JoystickHand::kLeftHand));
 		if(climbvalue > 0.3)
 			climb->ClimbRope();
 		else
