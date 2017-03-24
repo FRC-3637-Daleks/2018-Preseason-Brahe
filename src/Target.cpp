@@ -54,13 +54,16 @@ Target::visionThread(void *t)
     	default:
     		break;
     	}
-		cvSink.GrabFrame(myt->m_source);
-    	if(myt->m_feed == FRONT_CAMERA) {
-    		myt->processFrame();
-    		outputStreamFront.PutFrame(myt->m_source);
-    	}
-    	else {
-    		outputStreamRear.PutFrame(myt->m_source);
+    	// the grab should self regulate this thread, as it will timeout if
+    	// no frame is available.
+		if(cvSink.GrabFrame(myt->m_source)) {
+			if(myt->m_feed == FRONT_CAMERA) {
+				myt->processFrame();
+				outputStreamFront.PutFrame(myt->m_source);
+			}
+			else {
+				outputStreamRear.PutFrame(myt->m_source);
+			}
     	}
     }
 }
@@ -68,6 +71,10 @@ Target::visionThread(void *t)
 void
 Target::processFrame()
 {
+	// TBD: need to add state changes based on what we see
+	// we start in SEARCHING, change to AQUIRED if we think we may have found it
+	// then finally TARGETING for when we can trust the values.  If we lose the
+	// target we change the state back to SEARCHING.
 	std::vector<std::vector<cv::Point>> *dContours;
 	cv::Rect r;
 	float ratio;
@@ -155,4 +162,22 @@ cv::Rect
 Target::getR2()
 {
 	return m_r2;
+}
+
+bool
+Target::isAquired()
+{
+	return (m_state == AQUIRED);
+}
+
+bool
+Target::isLooking()
+{
+	return (m_state == SEARCHING);
+}
+
+bool
+Target::isTracked()
+{
+	return (m_state == TRACKING);
 }
