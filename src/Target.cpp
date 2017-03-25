@@ -31,6 +31,7 @@ void
 Target::visionThread(void *t)
 {
 	Target *myt = (Target *)t;
+	static long long cnt;
 	cs::VideoSink server;
 
     cs::UsbCamera camera0 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam0);
@@ -47,16 +48,24 @@ Target::visionThread(void *t)
     	switch(myt->m_feed) {
     	case FRONT_CAMERA:
     		server.SetSource(camera0);
+    		cvSink = CameraServer::GetInstance()->GetVideo();
     		break;
     	case REAR_CAMERA:
     		server.SetSource(camera1);
+    		cvSink = CameraServer::GetInstance()->GetVideo();
     		break;
     	default:
+    		myt->m_feed = FRONT_CAMERA;
+    		server.SetSource(camera0);
+    		cvSink = CameraServer::GetInstance()->GetVideo();
     		break;
     	}
     	// the grab should self regulate this thread, as it will timeout if
     	// no frame is available.
 		if(cvSink.GrabFrame(myt->m_source)) {
+			if(myt->m_source.empty())
+				continue;
+			frc::SmartDashboard::PutNumber("frames seen", cnt++);
 			if(myt->m_feed == FRONT_CAMERA) {
 				myt->processFrame();
 				outputStreamFront.PutFrame(myt->m_source);
@@ -79,7 +88,6 @@ Target::processFrame()
 	cv::Rect r;
 	float ratio;
 	int x, max;
-	cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 
 	max = 0; m_r1 = m_nullR; m_r2 = m_nullR;
 	m_gp.process(m_source);

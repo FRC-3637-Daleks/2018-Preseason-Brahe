@@ -23,8 +23,8 @@ enum Relays		 { LIGHT_SWITCH = 0 };
 #define PCM_ID 14
 
 // Camera servo positions
-#define FRONT_VIEW_POSITION 0.14
-#define GROUND_VIEW_POSITION 0.33
+#define FRONT_VIEW_POSITION 0.0 // 0.14
+#define GROUND_VIEW_POSITION 0.18 // 0.33
 
 #define ENCODER_TICKS_PER_REV 360
 #define WHEEL_DIAMETER_INCHES 6.0
