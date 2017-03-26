@@ -14,11 +14,27 @@
 #include <opencv2/features2d.hpp>
 #include <GripPipeline.h>
 
+// Width of one of the 2 rectangles of reflective tape
 #define TARGET_WIDTH 2
-#define FOV_V 0
-#define FOV_H 0
+// Width between outer edges of 2 rectangles of reflective tape
+#define FULL_TARGET_WIDTH 10.25
+// Field of View angular dimensions
+#define FOV_V 49.5
+#define FOV_H 63.1
+// Resolution dimensions in pixels
 #define RESOLUTION_X 320
 #define RESOLUTION_Y 240
+// Height to Width ratio has to be less than this percentage different from real ration (5 to 2) to be a match
+#define HW_RATIO_TOLERANCE 0.2
+// Actual height to width ratio of rectangle of reflective tape
+#define TARGET_HW_RATIO 2.5
+// Areas of smaller target must be less than this percentage different from larger taret to be a match
+#define AREA_TOLERANCE 0.3
+// Height of camera from the ground in inches
+#define CAMERA_HEIGHT 13.5
+// Height of top of target from the ground
+#define TOP_OF_TARGET_HEIGHT 15.75
+
 
 class Target {
 public:
@@ -38,6 +54,7 @@ private:
 	cv::Rect m_r1, m_r2;
 	cv::Rect m_nullR;
 	cv::Mat m_source;
+	cv::Point m_targetCtrPt;
 	trackingState_t m_state;
 	int m_resX, m_resY, m_target_width;
 	int m_cam0, m_cam1;
