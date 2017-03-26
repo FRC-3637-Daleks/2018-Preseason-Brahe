@@ -95,7 +95,7 @@ public:
 	void
 	AutonomousPeriodic()
 	{
-        static double target_acquisition_distance = 10600; // ~3.5 ft
+        static double target_acquisition_distance = 15500; // 10600; // ~3.5 ft
         static double backup_distance;
         static bool target_acquired = false;
         double ldist, rdist, distance;
@@ -117,7 +117,8 @@ public:
             // way that 60" travel is sufficient distance to get where
             // can find the target
             if (distance < target_acquisition_distance)
-                d->SetLeftRightMotorOutputs(-0.5, -0.5);
+                // d->SetLeftRightMotorOutputs(-0.5, -0.5);
+            	d->Drive(-0.5, -0.75);
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
                 autoStage = 5; // HACK stop after forward motion
