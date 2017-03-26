@@ -30,6 +30,8 @@
 #define TARGET_HW_RATIO 2.5
 // Areas of smaller target must be less than this percentage different from larger taret to be a match
 #define AREA_TOLERANCE 0.3
+// Height of centers of 2 rectangles of reflective tape have to differ by less than this percentage to be a match
+#define TARGET_CENTER_HEIGHT_TOLERANCE 0.3
 // Height of camera from the ground in inches
 #define CAMERA_HEIGHT 13.5
 // Height of top of target from the ground

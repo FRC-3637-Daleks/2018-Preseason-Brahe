@@ -41,7 +41,7 @@ Target::processFrame()
 	cv::Rect r;
 	float ratio_percent;
 	float mid1, mid2;
-	bool match_found = 0;
+	bool match_found = false;
 
 
 
@@ -84,12 +84,19 @@ Target::processFrame()
 				//For now, just use the first 2 which are the biggest ones
 				m_r1 = candRects.at(0);
 				m_r2 = candRects.at(1);
-//				for (std::vector<cv::Rect>::iterator it1 = candRects.begin() ; (!match_found && it1 != candRects.end()); ++it1) {
-//					mid1 = it1->tl().y + .5 * it1->height;
-//					for (std::vector<cv::Rect>::iterator it2 = it1 ; (!match_found && it2 != candRects.end()); ++it2) {
-//						mid2 = it2->tl().y + .5 * it2->height;
-//					}
-//				}
+				for (std::vector<cv::Rect>::iterator it1 = candRects.begin() ; (!match_found && it1 != candRects.end()); ++it1) {
+					for (std::vector<cv::Rect>::iterator it2 = it1 ; (!match_found && it2 != candRects.end()); ++it2) {
+						if (it1->area() / it2->area() - 1 < AREA_TOLERANCE) {
+							mid1 = it1->tl().y + .5 * it1->height;
+							mid2 = it2->tl().y + .5 * it2->height;
+							if (fabs(mid1 / mid2 - 1) < TARGET_CENTER_HEIGHT_TOLERANCE) {
+								match_found = true;
+								m_r1 = it1;
+								m_r2 = it2;
+							}
+						}
+					}
+				}
 			}
 		}
 		if (m_r1.height != 0) {
@@ -151,11 +158,11 @@ Target::targetAngle()
 			return 0.0;
 		case TRACKING:
 			if(m_r1.height != 0)
-				return acos((5 * m_r1.width) / (2 * m_r1.height));
+				//return acos((5 * m_r1.width) / (2 * m_r1.height));
 				// Find ratio of distance from target center to FOV center to total FOV and then multiply by FOV in degrees
 				// to get angle in degrees
-				// m_angle = ((m_targetCtrPt.x - .5 * RESOLUTION_X) / RESOLUTION_X) * FOV_H;
-				//return m_angle;
+				m_angle = ((m_targetCtrPt.x - .5 * RESOLUTION_X) / RESOLUTION_X) * FOV_H;
+				return m_angle;
 		default:
 			break;
 	}
