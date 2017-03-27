@@ -1,3 +1,5 @@
+START_ROBOT_CLASS(Robot)
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -16,6 +18,7 @@
 #include <Claw.h>
 #include <Climber.h>
 #include <Target.h>
+#include <IRsensor.h>
 #include <GripPipeline.h>
 
 class Robot: public frc::IterativeRobot
@@ -32,10 +35,10 @@ public:
 	Solenoid *climbPiston;
 	Relay *lightswitch;
 	Target *targeter;
+	IRsensor *irdst;
 	cv::Rect r1, r2;
 	int startPosition;
    	int autoStage;
-    	
 
 	void
 	RobotInit()
@@ -55,6 +58,7 @@ public:
 		d             = new DalekDrive(leftMotor, leftSlave, rightMotor, rightSlave, SHIFTER_SOLENOID);
 		claw          = new Claw(PISTON_SOLENOID, PIVOT_SOLENOID, ARM_SOLENOID, GEAR_SWITCH, CAMERA_SERVO);
 		climb         = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
+		irdst         = new IRsensor(IR_SENSOR_LEFT, IR_SENSOR_RIGHT);
 
 		lw->AddActuator("lightswitch", "lightswitch", lightswitch);
 	}
@@ -79,7 +83,7 @@ public:
 	void
 	AutonomousInit()
 	{
-	        // get autonomous start position
+	    // get autonomous start position
 		startPosition = 1;
 		autoStage = 0;
 		c->Start();
@@ -262,7 +266,6 @@ public:
 			sawButtonRelease = true;
 
 		// Climber controls
-
 		if(xbox->GetStartButton()) {
 			climb->MoveToIndex();
 			climb->GrabRope();
@@ -326,5 +329,3 @@ private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 
 };
-
-START_ROBOT_CLASS(Robot)

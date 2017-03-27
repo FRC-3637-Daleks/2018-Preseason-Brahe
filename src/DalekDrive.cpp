@@ -215,7 +215,7 @@ void
 DalekDrive::InitDalekDrive(void)
 {
     // Setup for LiveWindow
-    lw->AddActuator("Drive System Left ", "Drive Motor", m_leftMotor);
+    lw->AddActuator("Drive System Left", "Drive Motor", m_leftMotor);
     lw->AddActuator("Drive System Right", "Drive Motor", m_rightMotor);
     if(m_leftSlaveMotor)
         lw->AddActuator("Drive System Left", "Drive Motor slave", m_leftSlaveMotor);

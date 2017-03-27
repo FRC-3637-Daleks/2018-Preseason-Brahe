@@ -88,8 +88,11 @@ Target::processFrame()
 	std::vector<cv::Rect> candRects;
 	cv::Rect r;
 	float ratio_percent;
+<<<<<<< HEAD
 	float mid1, mid2;
 	bool match_found = false;
+=======
+>>>>>>> branch 'master' of https://github.com/FRC-3637-Daleks/Brahe.git
 
 	m_gp.process(m_source);
 	dContours = m_gp.getfindContoursOutput();
