@@ -88,16 +88,15 @@ Target::processFrame()
 	std::vector<cv::Rect> candRects;
 	cv::Rect r;
 	float ratio_percent;
-<<<<<<< HEAD
 	float mid1, mid2;
 	bool match_found = false;
-=======
->>>>>>> branch 'master' of https://github.com/FRC-3637-Daleks/Brahe.git
 
 	m_gp.process(m_source);
 	dContours = m_gp.getfindContoursOutput();
 	m_r1 = m_nullR;
 	m_r2 = m_nullR;
+	// Find contours whose bounding rectangle matches the h-w ratio of the reflective tape
+	// Add these rectangles to vector in descending order of area size
 	for (unsigned int i = 0; i < dContours->size(); i++) {
 		r = boundingRect(dContours->at(i));
 		ratio_percent = fabs(r.height/r.width - TARGET_HW_RATIO)/TARGET_HW_RATIO;
@@ -108,30 +107,41 @@ Target::processFrame()
 			candRects.insert(it, r);
 		}
 	}
-	if(candRects.size() == 1) {
-		// only found 1 candidate assume it is one of the rectangles of the target
-		m_r1 = candRects.at(0);
-		m_r2 = m_r1;
-		// Since only 1 rectangle, don't use full target width
-		m_target_width = TARGET_WIDTH;
-	}
-	else if(candRects.size() == 2) {
-		// All is good, found 2 candidates, yeah!
-		//FIXME: should put some code here to make sure roughly same size/parallel
-		m_r1 = candRects.at(0);
-		m_r2 = candRects.at(1);
-	}
-	else if(candRects.size() > 2) {
-		// look for 2 that are roughly same size & level
-		//FIXME: add code to pick 2 best rectangles
-		// For now, just use the first 2 which are the biggest ones
-		m_r1 = candRects.at(0);
-		m_r2 = candRects.at(1);
+	if(candRects.size() >= 1) {
+		// We have found at least one part of the target so set our state to indicate that
+		if (m_state == SEARCHING)
+			m_state = AQUIRED;
+		else
+			m_state = TRACKING;
+		// look for 2 rectangles that are roughly same size & level & choose them as target components
+		for (std::vector<cv::Rect>::iterator it1 = candRects.begin() ; (!match_found && it1 != candRects.end()); ++it1) {
+			for (std::vector<cv::Rect>::iterator it2 = std::next(it1,1) ; (!match_found && it2 != candRects.end()); ++it2) {
+				if (it1->area() / it2->area() - 1 < AREA_TOLERANCE) {
+					mid1 = it1->tl().y + .5 * it1->height;
+					mid2 = it2->tl().y + .5 * it2->height;
+					if (fabs(mid1 / mid2 - 1) < TARGET_CENTER_HEIGHT_TOLERANCE) {
+						match_found = true;
+						m_r1 = *it1;
+						m_r2 = *it2;
+					}
+				}
+			}
+		}
+		if (!match_found) {
+		// We didn't find 2 rectangles roughly same size and level, so just use the first (largest) one and hope!
+			m_r1 = candRects.at(0);
+			m_r2 = m_r1;
+			// Since only 1 rectangle, don't use full target width
+			m_target_width = TARGET_WIDTH;
+		}
+	} else {
+		m_state = SEARCHING;
 	}
 	if(m_r1.height != 0) {
 		//FIXME: for debugging only, remove later
 		cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
 		cv::rectangle(m_source, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
+		// Set center point of composite target
 		if(m_r1.tl().x < m_r2.tl().x)
 			m_targetCtrPt.x = (m_r1.tl().x + m_r2.br().x) / 2;
 		else

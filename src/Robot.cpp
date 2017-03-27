@@ -1,5 +1,3 @@
-START_ROBOT_CLASS(Robot)
-
 #include <iostream>
 #include <memory>
 #include <string>
@@ -329,3 +327,5 @@ private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 
 };
+
+START_ROBOT_CLASS(Robot)
