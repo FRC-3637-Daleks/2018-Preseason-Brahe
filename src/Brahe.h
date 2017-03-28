@@ -34,4 +34,11 @@ enum Relays		 { LIGHT_SWITCH = 0 };
 #define RPM_THRESHOLD 300
 #define RAMP_RATE 50.0
 
+#define LEFT_POSITION	"1"
+#define CENTER_POSITION	"2"
+#define RIGHT_POSITION	"3"
+
+#define MOBILITY		"0"
+#define GEAR_HANDLING	"1"
+
 #endif /* SRC_BRAHE_H_ */

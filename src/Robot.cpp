@@ -36,7 +36,8 @@ public:
 	IRsensor *irdst;
 	cv::Rect r1, r2;
 	int startPosition;
-   	int autoStage;
+	bool autoGear;
+	int autoStage;
 
 	void
 	RobotInit()
@@ -58,7 +59,16 @@ public:
 		climb         = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
 		irdst         = new IRsensor(IR_SENSOR_LEFT, IR_SENSOR_RIGHT);
 
-		lw->AddActuator("lightswitch", "lightswitch", lightswitch);
+		autoLocation.AddDefault("Center", CENTER_POSITION);
+		autoLocation.AddObject("Left", LEFT_POSITION);
+		autoLocation.AddObject("Right", RIGHT_POSITION);
+		frc::SmartDashboard::PutData("Autonomous Starting Location", &autoLocation);
+
+		autoMode.AddDefault("Gear Placement", GEAR_HANDLING);
+		autoMode.AddDefault("Mobility", MOBILITY);
+		frc::SmartDashboard::PutData("Autonomous Mode", &autoMode);
+
+		lw->AddActuator("light switch", "light switch", lightswitch);
 	}
 
 	void
@@ -82,7 +92,21 @@ public:
 	AutonomousInit()
 	{
 	    // get autonomous start position
-		startPosition = 1;
+		std::string loc = autoLocation.GetSelected();
+		if(loc == LEFT_POSITION)
+			startPosition = 0;
+		else if (loc == CENTER_POSITION)
+			startPosition = 1;
+		else if (loc == RIGHT_POSITION)
+			startPosition = 2;
+		else
+			startPosition = 1;
+		autoGear = (autoMode.GetSelected() == GEAR_HANDLING);
+		// autonomous override
+		// if not gear placing, and in center position we can't get mobility points
+		if(!autoGear && (loc == CENTER_POSITION))
+			autoGear = true;
+
 		autoStage = 0;
 		c->Start();
 		claw->TravelMode();
@@ -97,7 +121,7 @@ public:
 	void
 	AutonomousPeriodic()
 	{
-        static double target_acquisition_distance = 15500; // 10600; // ~3.5 ft
+        static double target_acquisition_distance = 15900; // 10600; // ~3.5 ft
         static double backup_distance;
         static bool target_acquired = false;
         double ldist, rdist, distance;
@@ -120,7 +144,7 @@ public:
             // can find the target
             if (distance < target_acquisition_distance)
                 // d->SetLeftRightMotorOutputs(-0.5, -0.5);
-            	d->Drive(-0.5, -0.75);
+            	d->Drive(-0.55, -0.77);
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
                 autoStage = 5; // HACK stop after forward motion
@@ -325,6 +349,8 @@ public:
 
 private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
+	frc::SendableChooser<std::string> autoLocation;
+	frc::SendableChooser<std::string> autoMode;
 
 };
 
