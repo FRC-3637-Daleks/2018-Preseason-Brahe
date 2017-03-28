@@ -48,16 +48,16 @@ Target::visionThread(void *t)
     	switch(myt->m_feed) {
     	case FRONT_CAMERA:
     		server.SetSource(camera0);
-    		cvSink = CameraServer::GetInstance()->GetVideo();
+    		cvSink = CameraServer::GetInstance()->GetVideo("USB Camera 0");
     		break;
     	case REAR_CAMERA:
     		server.SetSource(camera1);
-    		cvSink = CameraServer::GetInstance()->GetVideo();
+    		cvSink = CameraServer::GetInstance()->GetVideo("USB Camera 1");
     		break;
     	default:
     		myt->m_feed = FRONT_CAMERA;
     		server.SetSource(camera0);
-    		cvSink = CameraServer::GetInstance()->GetVideo();
+    		cvSink = CameraServer::GetInstance()->GetVideo("USB Camera 0");
     		break;
     	}
     	// the grab should self regulate this thread, as it will timeout if
