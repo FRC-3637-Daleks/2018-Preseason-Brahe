@@ -42,7 +42,7 @@ class Target {
 public:
 	typedef enum trackState { SEARCHING, AQUIRED, TRACKING } trackingState_t ;
 	Target(int cam0, int cam1);
-	void processFrame();
+	void processFrame(cv::Mat src);
 	void switchCam(enum Cameras cam);
 	bool isAquired();
 	bool isTracked();
@@ -55,7 +55,6 @@ public:
 private:
 	cv::Rect m_r1, m_r2;
 	cv::Rect m_nullR;
-	cv::Mat m_source;
 	cv::Point m_targetCtrPt;
 	trackingState_t m_state;
 	int m_resX, m_resY, m_target_width;

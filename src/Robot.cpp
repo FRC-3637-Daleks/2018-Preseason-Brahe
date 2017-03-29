@@ -144,7 +144,7 @@ public:
             // can find the target
             if (distance < target_acquisition_distance)
                 // d->SetLeftRightMotorOutputs(-0.5, -0.5);
-            	d->Drive(-0.55, -0.77);
+            	d->Drive(-0.60, -0.75);
             else {
                 d->SetLeftRightMotorOutputs(0.0, 0.0);
                 autoStage = 5; // HACK stop after forward motion
@@ -243,6 +243,7 @@ public:
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
 		lightswitch->Set(Relay::kForward);
+		// lightswitch->Set(Relay::kReverse);
 	}
 
 	void

@@ -20,7 +20,6 @@ Target::Target(int cam0, int cam1)
 	m_cam0		   = cam0;
 	m_cam1		   = cam1;
 	m_feed         = FRONT_CAMERA;
-
 	std::thread m_eyes(visionThread, (void *)this);
 	m_eyes.detach();
 
@@ -32,6 +31,7 @@ Target::visionThread(void *t)
 {
 	Target *myt = (Target *)t;
 	static long long cnt;
+	cv::Mat source;
 	cs::VideoSink server;
 
     cs::UsbCamera camera0 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam0);
@@ -41,8 +41,7 @@ Target::visionThread(void *t)
 
     server = CameraServer::GetInstance()->GetServer();
 	cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
-    cs::CvSource outputStreamRear  = CameraServer::GetInstance()->PutVideo("Rear", 320, 480);
-    cs::CvSource outputStreamFront = CameraServer::GetInstance()->PutVideo("Front", 320, 480);
+    cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Auto", 320, 480);
 
     while(true) {
     	switch(myt->m_feed) {
@@ -62,28 +61,23 @@ Target::visionThread(void *t)
     	}
     	// the grab should self regulate this thread, as it will timeout if
     	// no frame is available.
-		if(cvSink.GrabFrame(myt->m_source)) {
-			if(myt->m_source.empty())
+		if(cvSink.GrabFrame(source)) {
+			if(source.empty())
 				continue;
 			frc::SmartDashboard::PutNumber("frames seen", cnt++);
 			if(myt->m_feed == FRONT_CAMERA) {
-				myt->processFrame();
-				outputStreamFront.PutFrame(myt->m_source);
+				myt->processFrame(source);
+				outputStream.PutFrame(source);
 			}
-			else {
-				outputStreamRear.PutFrame(myt->m_source);
-			}
+			else
+				outputStream.PutFrame(source);
     	}
     }
 }
 
 void
-Target::processFrame()
+Target::processFrame(cv::Mat src)
 {
-	// TBD: need to add state changes based on what we see
-	// we start in SEARCHING, change to AQUIRED if we think we may have found it
-	// then finally TARGETING for when we can trust the values.  If we lose the
-	// target we change the state back to SEARCHING.
 	std::vector<std::vector<cv::Point>> *dContours;
 	std::vector<cv::Rect> candRects;
 	cv::Rect r;
@@ -91,15 +85,16 @@ Target::processFrame()
 	float mid1, mid2;
 	bool match_found = false;
 
-	m_gp.process(m_source);
-	dContours = m_gp.getfindContoursOutput();
+	m_gp.Process(src);
+	dContours = m_gp.GetFindContoursOutput();
+	frc::SmartDashboard::PutNumber("Contours", dContours->size());
 	m_r1 = m_nullR;
 	m_r2 = m_nullR;
 	// Find contours whose bounding rectangle matches the h-w ratio of the reflective tape
 	// Add these rectangles to vector in descending order of area size
 	for (unsigned int i = 0; i < dContours->size(); i++) {
 		r = boundingRect(dContours->at(i));
-		ratio_percent = fabs(r.height/r.width - TARGET_HW_RATIO)/TARGET_HW_RATIO;
+		ratio_percent = fabs((r.height/r.width) - TARGET_HW_RATIO)/TARGET_HW_RATIO;
 		if(ratio_percent <= HW_RATIO_TOLERANCE) {
 			std::vector<cv::Rect>::iterator it = candRects.begin();
 			while ((it != candRects.end()) && (r.area() <= it->area()))
@@ -107,6 +102,7 @@ Target::processFrame()
 			candRects.insert(it, r);
 		}
 	}
+	frc::SmartDashboard::PutNumber("CandRects", candRects.size());
 	if(candRects.size() >= 1) {
 		// We have found at least one part of the target so set our state to indicate that
 		if (m_state == SEARCHING)
@@ -139,8 +135,8 @@ Target::processFrame()
 	}
 	if(m_r1.height != 0) {
 		//FIXME: for debugging only, remove later
-		cv::rectangle(m_source, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
-		cv::rectangle(m_source, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
+		cv::rectangle(src, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
+		cv::rectangle(src, m_r2, cv::Scalar(225,0,0), 5, 8, 0);
 		// Set center point of composite target
 		if(m_r1.tl().x < m_r2.tl().x)
 			m_targetCtrPt.x = (m_r1.tl().x + m_r2.br().x) / 2;
@@ -152,7 +148,7 @@ Target::processFrame()
 			m_targetCtrPt.y = m_r2.tl().y + .5 * m_r2.height;
 	}
 
-	frc::SmartDashboard::PutNumber("Contours", dContours->size());
+
 	return;
 }
 

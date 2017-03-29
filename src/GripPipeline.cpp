@@ -7,7 +7,7 @@ GripPipeline::GripPipeline() {
 /**
 * Runs an iteration of the pipeline and updates outputs.
 */
-void GripPipeline::process(cv::Mat& source0){
+void GripPipeline::Process(cv::Mat& source0){
 	//Step HSL_Threshold0:
 	//input
 	cv::Mat hslThresholdInput = source0;
