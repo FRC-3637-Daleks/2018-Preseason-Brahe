@@ -33,34 +33,35 @@ Target::visionThread(void *t)
 	static long long cnt;
 	cv::Mat source;
 	cs::VideoSink server;
+	cs::CvSink cvSink;
 
-    cs::UsbCamera camera0 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam0);
-    cs::UsbCamera camera1 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam1);
-    camera0.SetResolution(320, 480);
-    camera1.SetResolution(320, 480);
+    	cs::UsbCamera camera0 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam0);
+    	cs::UsbCamera camera1 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam1);
+    	camera0.SetResolution(640, 480);
+    	camera1.SetResolution(640, 480);
 
-    server = CameraServer::GetInstance()->GetServer();
-	cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
-    cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Auto", 320, 480);
+	server = CameraServer::GetInstance()->GetServer();
+	cvSink = CameraServer::GetInstance()->GetVideo();
+	cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Processed", 640, 480);
 
-    while(true) {
-    	switch(myt->m_feed) {
-    	case FRONT_CAMERA:
-    		server.SetSource(camera0);
-    		cvSink = CameraServer::GetInstance()->GetVideo("USB Camera 0");
-    		break;
-    	case REAR_CAMERA:
-    		server.SetSource(camera1);
-    		cvSink = CameraServer::GetInstance()->GetVideo("USB Camera 1");
-    		break;
-    	default:
-    		myt->m_feed = FRONT_CAMERA;
-    		server.SetSource(camera0);
-    		cvSink = CameraServer::GetInstance()->GetVideo("USB Camera 0");
-    		break;
-    	}
-    	// the grab should self regulate this thread, as it will timeout if
-    	// no frame is available.
+    	while(true) {
+		switch(myt->m_feed) {
+			case FRONT_CAMERA:
+				server.SetSource(camera0);
+				cvSink.SetSource(camera0);
+				break;
+			case REAR_CAMERA:
+				server.SetSource(camera1);
+				cvSink.SetSource(camera1);
+				break;
+			default:
+				myt->m_feed = FRONT_CAMERA;
+				server.SetSource(camera0);
+				cvSink.SetSource(camera0);
+				break;
+    		}
+		// the grab should self regulate this thread, as it will timeout if
+		// no frame is available.
 		if(cvSink.GrabFrame(source)) {
 			if(source.empty())
 				continue;
@@ -71,8 +72,8 @@ Target::visionThread(void *t)
 			}
 			else
 				outputStream.PutFrame(source);
-    	}
-    }
+		}
+	}
 }
 
 void
@@ -124,15 +125,17 @@ Target::processFrame(cv::Mat src)
 			}
 		}
 		if (!match_found) {
-		// We didn't find 2 rectangles roughly same size and level, so just use the first (largest) one and hope!
+			// We didn't find 2 rectangles roughly same size and level, 
+			// so just use the first (largest) one and hope!
 			m_r1 = candRects.at(0);
 			m_r2 = m_r1;
 			// Since only 1 rectangle, don't use full target width
 			m_target_width = TARGET_WIDTH;
 		}
-	} else {
+	} 
+	else
 		m_state = SEARCHING;
-	}
+	
 	if(m_r1.height != 0) {
 		//FIXME: for debugging only, remove later
 		cv::rectangle(src, m_r1, cv::Scalar(225,0,0), 5, 8, 0);
@@ -147,8 +150,6 @@ Target::processFrame(cv::Mat src)
 		else
 			m_targetCtrPt.y = m_r2.tl().y + .5 * m_r2.height;
 	}
-
-
 	return;
 }
 
@@ -167,12 +168,14 @@ Target::targetAngle()
 		case AQUIRED:
 			return 0.0;
 		case TRACKING:
-			if(m_r1.height != 0)
+			if(m_r1.height != 0) {
 				//return acos((5 * m_r1.width) / (2 * m_r1.height));
 				// Find ratio of distance from target center to FOV center to total FOV and then multiply by FOV in degrees
 				// to get angle in degrees
 				m_angle = ((m_targetCtrPt.x - .5 * RESOLUTION_X) / RESOLUTION_X) * FOV_H;
 				return m_angle;
+			}
+			return 0.0;
 		default:
 			break;
 	}
