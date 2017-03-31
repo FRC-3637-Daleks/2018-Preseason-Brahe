@@ -59,12 +59,12 @@ public:
 		climb         = new Climber(climbMotor, climbPiston, DRUM_SWITCH, CLIMB_SWITCH);
 		irdst         = new IRsensor(IR_SENSOR_LEFT, IR_SENSOR_RIGHT);
 
-		autoLocation.AddDefault("Center", CENTER_POSITION);
-		autoLocation.AddObject("Left", LEFT_POSITION);
+		autoLocation.AddObject("Center", CENTER_POSITION);
+		autoLocation.AddDefault("Left", LEFT_POSITION);
 		autoLocation.AddObject("Right", RIGHT_POSITION);
 		frc::SmartDashboard::PutData("Autonomous Starting Location", &autoLocation);
 
-		autoMode.AddDefault("Gear Placement", GEAR_HANDLING);
+		autoMode.AddObject("Gear Placement", GEAR_HANDLING);
 		autoMode.AddDefault("Mobility", MOBILITY);
 		frc::SmartDashboard::PutData("Autonomous Mode", &autoMode);
 
@@ -109,6 +109,8 @@ public:
 			autoGear = true;
 
 		autoStage = 0;
+
+		// make sure robot is properly setup
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
@@ -163,7 +165,8 @@ public:
 					d->Drive(arc_speed, arc_curve);
 			}
 			else {
-				autoStage = 1;
+				//HACK: skip to stage 5 until we get this working
+				autoStage = 5;
 				d->SetLeftRightMotorOutputs(0.0, 0.0);
 				d->ShiftGear(LOW_GEAR);
 			}
