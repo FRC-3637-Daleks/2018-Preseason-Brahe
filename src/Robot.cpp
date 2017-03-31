@@ -85,6 +85,7 @@ public:
 	void
 	DisabledPeriodic()
 	{
+		autoStage = 0;
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
 	}
 
@@ -101,9 +102,9 @@ public:
 			startPosition = 2;
 		else
 			startPosition = 1;
+
+		// get autonomous mode of operation
 		autoGear = (autoMode.GetSelected() == GEAR_HANDLING);
-		// autonomous override
-		// if not gear placing, and in center position we can't get mobility points
 		if(!autoGear && (loc == CENTER_POSITION))
 			autoGear = true;
 
@@ -111,112 +112,92 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
-		leftMotor->SetPosition(0);
-		rightMotor->SetPosition(0);
+		leftMotor->SetPosition(0); rightMotor->SetPosition(0);
 		d->ShiftGear(HIGH_GEAR);
 		lightswitch->Set(Relay::kReverse);
         targeter->switchCam(FRONT_CAMERA);
 	}
 
 	void
-	AutonomousPeriodic()
+	AutonomousMobility()
 	{
-        static double target_acquisition_distance = 15900; // 10600; // ~3.5 ft
-        static double backup_distance;
-        static bool target_acquired = false;
-        double ldist, rdist, distance;
-        double targetAngle, targetDistance;
+		static double travel_distance = 10600;
+		double ldist, rdist, distance;
 
-		frc::SmartDashboard::PutNumber("Autonomous Stage", autoStage);
         ldist = abs(leftMotor->GetEncPosition());
         rdist = abs(rightMotor->GetEncPosition());
         distance = (ldist >  rdist) ? ldist : rdist;
-        frc::SmartDashboard::PutNumber("Distance traveled", distance);
 
-        // get current targeting data
-        targetAngle = targeter->targetAngle();
-        targetDistance = targeter->targetDistance();
-        frc::SmartDashboard::PutNumber("Distance to target", targetAngle);
-        frc::SmartDashboard::PutNumber("Angle to target", targetDistance);
+        if(distance < travel_distance)
+        	d->SetLeftRightMotorOutputs(-0.5, -0.5);
+        else
+        	d->SetLeftRightMotorOutputs(0.0, 0.0);
+	}
 
-        if(autoStage == 0) {
-            // initial start stage - move to target acquisition point
-            // for now we will assume that we are oriented in such a
-            // way that 60" travel is sufficient distance to get where
-            // can find the target
-            if (distance < target_acquisition_distance)
-                // d->SetLeftRightMotorOutputs(-0.5, -0.5);
-            	d->Drive(-0.60, -0.75);
-            else {
-                d->SetLeftRightMotorOutputs(0.0, 0.0);
-                autoStage = 5; // HACK stop after forward motion
-            }
-        }
-        else if(autoStage == 1) {
-            // roughly 80" from starting point, now need to find
-            // the visual targets to orient the bot correctly this
-            // will depend on our starting position, left, right or
-            // center.  Center should require no change as the 
-            // target should be in view and ideally straight ahead.
-        	// Starting on the left will require us to turn left and
-        	// similarly starting on the right will require us to turn right.
-        	// How much is a bit of a crap shoot.  If grip code is working
-            // we can run this in a polling loop
-        	d->ShiftGear(LOW_GEAR);
-            targetAngle = 0.0; targetDistance = 0.0; target_acquired = 1;
-            if(!target_acquired) {
-                // make a call to see if target found here <TBD>
-                // setting targetAngle and targetDistance
-                switch(startPosition) {
-                    case 0: // left side
-                        d->SetLeftRightMotorOutputs(-0.25, 0.25);
-                        break;
-                    case 1: // center
-                        d->SetLeftRightMotorOutputs(0.25, 0.25);
-                        break;
-                    case 2: // right side
-                        d->SetLeftRightMotorOutputs(0.25, -0.25);
-                        break;
-                    default:
-                        d->SetLeftRightMotorOutputs(0.0, 0.0);
-                        break;
-                }
-                if (abs(targetAngle) < 5){
-                	target_acquired = true;
-              	}
-            }
-            else
-                autoStage = 2;
-        }
-        else if(autoStage == 2) {
-            // We in theory have found/aligned with the target so
-            // we can at this point trundle forward to the peg
-            // We need to keep the target centered in our field of
-            // vision, so again the grip code will be used to provide
-            // the same 2 pieces of information angle to target and
-            // distance to target
-            // make call to get target distance and angle <TBD>
-            targetAngle = 0.0; targetDistance = 0.0;
-            if (targetDistance > 5) {
-                if (targetAngle > 0)
-                    // off to the right, speed should be set depending on
-                    // off center we are
-                    d->SetLeftRightMotorOutputs(0.25, -0.25);
-                else if (targetAngle == 0)
-                    d->SetLeftRightMotorOutputs(0.25, 0.25);
-                else 
-                    // off to the right, speed should be set depending on
-                    // off center we are
-                    d->SetLeftRightMotorOutputs(-0.25, 0.25);
-            }
-            else {
-                d->SetLeftRightMotorOutputs(0.0, 0.0);
-                autoStage = 3;
-            }
-        }
-        else if(autoStage == 3) {
-            // We are now at the peg or so we believe, so do the peg deployment
-            // and backup
+	void
+	AutonomousGearPlacement()
+	{
+		static double arc_distance = 12800, center_distance = 8000;
+		static bool target_acquired = false;
+        static double backup_distance;
+		double ldist, rdist, distance, req_distance;
+		double arc_speed = -0.6, arc_curve = 0.75, center_speed = -0.5;
+		double target_angle, target_dist;
+
+		ldist = abs(leftMotor->GetEncPosition());
+		rdist = abs(rightMotor->GetEncPosition());
+		distance = (ldist >  rdist) ? ldist : rdist;
+
+		req_distance = arc_distance;
+		if(startPosition == 1)
+			req_distance = center_distance;
+
+		if(autoStage == 0) {
+			// Make the initial arc or travel straight to get close
+			if(distance < req_distance) {
+				if(startPosition == 1)
+					d->SetLeftRightMotorOutputs(center_speed, center_speed);
+				else if(startPosition == 0)
+					d->Drive(arc_speed, -arc_curve);
+				else if(startPosition == 2)
+					d->Drive(arc_speed, arc_curve);
+			}
+			else {
+				autoStage = 1;
+				d->SetLeftRightMotorOutputs(0.0, 0.0);
+				d->ShiftGear(LOW_GEAR);
+			}
+		}
+		else if(autoStage == 1) {
+			// do we have a target
+			target_acquired = targeter->isAquired();
+			target_angle = targeter->targetAngle();
+			if(!target_acquired) {
+				if(target_angle < 0.0)
+					d->SetLeftRightMotorOutputs(-0.25, 0.25);
+				else if(target_angle > 0.0)
+					d->SetLeftRightMotorOutputs(0.25, -0.25);
+				else {
+					d->SetLeftRightMotorOutputs(0.0, 0.0);
+					target_acquired = true;
+					autoStage = 2;
+				}
+			}
+			else {
+				d->SetLeftRightMotorOutputs(0.0, 0.0);
+				autoStage = 2;
+			}
+		}
+		else if(autoStage == 2) {
+			target_dist = targeter->targetDistance();
+			if(target_dist)
+				d->SetLeftRightMotorOutputs(-0.25, -0.25);
+			else {
+				d->SetLeftRightMotorOutputs(0.0, 0.0);
+				autoStage = 3;
+			}
+		}
+		else if(autoStage == 3) {
             claw->DeployMode();
             Wait(0.1);
             claw->OpenClaw();
@@ -236,6 +217,16 @@ public:
         }
         else
         	d->SetLeftRightMotorOutputs(0.0, 0.0);
+	}
+
+	void
+	AutonomousPeriodic()
+	{
+		if(!autoGear)
+			AutonomousMobility();
+		else
+			AutonomousGearPlacement();
+		return;
     }
 
 	void
@@ -244,8 +235,7 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
-		// lightswitch->Set(Relay::kForward);
-		lightswitch->Set(Relay::kReverse);
+		lightswitch->Set(Relay::kForward);
 	}
 
 	void
@@ -254,12 +244,7 @@ public:
 		static bool sawButtonRelease = true;
 		static long teleopCnt;
 		bool useArcade, toggleClaw;
-		double climbvalue, targetAngle, targetDistance;
-
-		targetAngle = targeter->targetAngle();
-		targetDistance = targeter->targetDistance();
-		frc::SmartDashboard::PutNumber("Distance to target", targetAngle);
-		frc::SmartDashboard::PutNumber("Angle to target", targetDistance);
+		double climbvalue;
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
 
