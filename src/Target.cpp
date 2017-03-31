@@ -35,16 +35,21 @@ Target::visionThread(void *t)
 	cs::VideoSink server;
 	cs::CvSink cvSink;
 
-    	cs::UsbCamera camera0 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam0);
-    	cs::UsbCamera camera1 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam1);
-    	camera0.SetResolution(640, 480);
-    	camera1.SetResolution(640, 480);
+    cs::UsbCamera camera0 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam0);
+    cs::UsbCamera camera1 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam1);
+
+    camera0.SetResolution(640, 480);
+    camera0.SetBrightness(45);
+    camera0.SetExposureAuto();
+    camera1.SetResolution(640, 480);
+    camera1.SetBrightness(45);
+    camera1.SetExposureAuto();
 
 	server = CameraServer::GetInstance()->GetServer();
 	cvSink = CameraServer::GetInstance()->GetVideo();
 	cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Processed", 640, 480);
 
-    	while(true) {
+    while(true) {
 		switch(myt->m_feed) {
 			case FRONT_CAMERA:
 				server.SetSource(camera0);
@@ -59,7 +64,7 @@ Target::visionThread(void *t)
 				server.SetSource(camera0);
 				cvSink.SetSource(camera0);
 				break;
-    		}
+    	}
 		// the grab should self regulate this thread, as it will timeout if
 		// no frame is available.
 		if(cvSink.GrabFrame(source)) {
@@ -77,7 +82,7 @@ Target::visionThread(void *t)
 }
 
 void
-Target::processFrame(cv::Mat src)
+Target::processFrame(cv::Mat& src)
 {
 	std::vector<std::vector<cv::Point>> *dContours;
 	std::vector<cv::Rect> candRects;
@@ -95,7 +100,8 @@ Target::processFrame(cv::Mat src)
 	// Add these rectangles to vector in descending order of area size
 	for (unsigned int i = 0; i < dContours->size(); i++) {
 		r = boundingRect(dContours->at(i));
-		ratio_percent = fabs((r.height/r.width) - TARGET_HW_RATIO)/TARGET_HW_RATIO;
+		ratio_percent = fabs(((float)r.height/(float)r.width) - TARGET_HW_RATIO)/TARGET_HW_RATIO;
+		frc::SmartDashboard::PutNumber("Ratio", ratio_percent);
 		if(ratio_percent <= HW_RATIO_TOLERANCE) {
 			std::vector<cv::Rect>::iterator it = candRects.begin();
 			while ((it != candRects.end()) && (r.area() <= it->area()))
@@ -114,8 +120,8 @@ Target::processFrame(cv::Mat src)
 		for (std::vector<cv::Rect>::iterator it1 = candRects.begin() ; (!match_found && it1 != candRects.end()); ++it1) {
 			for (std::vector<cv::Rect>::iterator it2 = std::next(it1,1) ; (!match_found && it2 != candRects.end()); ++it2) {
 				if (it1->area() / it2->area() - 1 < AREA_TOLERANCE) {
-					mid1 = it1->tl().y + .5 * it1->height;
-					mid2 = it2->tl().y + .5 * it2->height;
+					mid1 = (float)(it1->tl().y) + (0.5 * (float)(it1->height));
+					mid2 = (float)(it2->tl().y) + (0.5 * (float)(it2->height));
 					if (fabs(mid1 / mid2 - 1) < TARGET_CENTER_HEIGHT_TOLERANCE) {
 						match_found = true;
 						m_r1 = *it1;
@@ -146,9 +152,9 @@ Target::processFrame(cv::Mat src)
 		else
 			m_targetCtrPt.x = (m_r2.tl().x + m_r1.br().x) / 2;
 		if(m_r1.height > m_r2.height)
-			m_targetCtrPt.y = m_r1.tl().y + .5 * m_r1.height;
+			m_targetCtrPt.y = (int)((float)(m_r1.tl().y) + (0.5 * (float)(m_r1.height)));
 		else
-			m_targetCtrPt.y = m_r2.tl().y + .5 * m_r2.height;
+			m_targetCtrPt.y = (int)((float)(m_r2.tl().y) + (0.5 * (float)(m_r2.height)));
 	}
 	return;
 }
@@ -172,7 +178,7 @@ Target::targetAngle()
 				//return acos((5 * m_r1.width) / (2 * m_r1.height));
 				// Find ratio of distance from target center to FOV center to total FOV and then multiply by FOV in degrees
 				// to get angle in degrees
-				m_angle = ((m_targetCtrPt.x - .5 * RESOLUTION_X) / RESOLUTION_X) * FOV_H;
+				m_angle = (((float)m_targetCtrPt.x - (0.5 * (float)RESOLUTION_X)) / (float)RESOLUTION_X) * (float)FOV_H;
 				return m_angle;
 			}
 			return 0.0;
@@ -193,13 +199,14 @@ Target::targetDistance()
 		case TRACKING:
 			// return ((5 * m_target_width * m_resX) / (4 * m_r1.width * tan(m_fovH / 2)));
 			// Height of top of target - height of camera gives us the opposite side of a right triangle
-			opp_side = TOP_OF_TARGET_HEIGHT - CAMERA_HEIGHT;
+			opp_side = fabs(TOP_OF_TARGET_HEIGHT - CAMERA_HEIGHT);
 			// We can get the angle from the robot's camera to the top of the target by finding the distance in pixels from the
 			// top of the target to the center of the FOV, dividing that by the entire FOV in pixels to get the ratio and then
 			// multiply by the vertical FOV in degrees.
-			ratio = RESOLUTION_Y/2 -  m_r1.tl().y;
-			angle = ratio * FOV_V;
-			m_distance = opp_side / tan(angle);
+			ratio = ((float)RESOLUTION_Y/2.0 -  (float)(m_r1.tl().y))/(float)RESOLUTION_Y;
+			angle = ratio * (float)FOV_V;
+			frc::SmartDashboard::PutNumber("Dangle", angle);
+			m_distance = opp_side / tan((angle/180.0)*(2*3.1415926));
 			return m_distance;
 		default:
 			break;

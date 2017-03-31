@@ -136,6 +136,8 @@ public:
         // get current targeting data
         targetAngle = targeter->targetAngle();
         targetDistance = targeter->targetDistance();
+        frc::SmartDashboard::PutNumber("Distance to target", targetAngle);
+        frc::SmartDashboard::PutNumber("Angle to target", targetDistance);
 
         if(autoStage == 0) {
             // initial start stage - move to target acquisition point
@@ -234,7 +236,7 @@ public:
         }
         else
         	d->SetLeftRightMotorOutputs(0.0, 0.0);
-    	}
+    }
 
 	void
 	TeleopInit()
@@ -242,8 +244,8 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
-		lightswitch->Set(Relay::kForward);
-		// lightswitch->Set(Relay::kReverse);
+		// lightswitch->Set(Relay::kForward);
+		lightswitch->Set(Relay::kReverse);
 	}
 
 	void
@@ -252,7 +254,12 @@ public:
 		static bool sawButtonRelease = true;
 		static long teleopCnt;
 		bool useArcade, toggleClaw;
-		double climbvalue;
+		double climbvalue, targetAngle, targetDistance;
+
+		targetAngle = targeter->targetAngle();
+		targetDistance = targeter->targetDistance();
+		frc::SmartDashboard::PutNumber("Distance to target", targetAngle);
+		frc::SmartDashboard::PutNumber("Angle to target", targetDistance);
 
 		useArcade = (leftJoystick->GetZ() == -1.0);
 
@@ -340,12 +347,12 @@ public:
 	DashboardUpdates()
 	{
 		frc::SmartDashboard::PutBoolean("Compressor ", !(c->GetPressureSwitchValue()));
-		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
-		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
 		frc::SmartDashboard::PutBoolean("Gear Switch", claw->GearPresent());
 		frc::SmartDashboard::PutBoolean("Drum Switch", climb->IsIndexed());
 		frc::SmartDashboard::PutBoolean("Claw Open", claw->IsOpen());
 		frc::SmartDashboard::PutBoolean("At Top", climb->IsAtTop());
+		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
+		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
 	}
 
 private:

@@ -22,10 +22,10 @@
 #define FOV_V 49.5
 #define FOV_H 63.1
 // Resolution dimensions in pixels
-#define RESOLUTION_X 320
-#define RESOLUTION_Y 240
+#define RESOLUTION_X 640
+#define RESOLUTION_Y 480
 // Height to Width ratio has to be less than this percentage different from real ration (5 to 2) to be a match
-#define HW_RATIO_TOLERANCE 0.2
+#define HW_RATIO_TOLERANCE 0.4
 // Actual height to width ratio of rectangle of reflective tape
 #define TARGET_HW_RATIO 2.5
 // Areas of smaller target must be less than this percentage different from larger taret to be a match
@@ -33,7 +33,7 @@
 // Height of centers of 2 rectangles of reflective tape have to differ by less than this percentage to be a match
 #define TARGET_CENTER_HEIGHT_TOLERANCE 0.3
 // Height of camera from the ground in inches
-#define CAMERA_HEIGHT 13.5
+#define CAMERA_HEIGHT 17.5
 // Height of top of target from the ground
 #define TOP_OF_TARGET_HEIGHT 15.75
 
@@ -42,7 +42,7 @@ class Target {
 public:
 	typedef enum trackState { SEARCHING, AQUIRED, TRACKING } trackingState_t ;
 	Target(int cam0, int cam1);
-	void processFrame(cv::Mat src);
+	void processFrame(cv::Mat& src);
 	void switchCam(enum Cameras cam);
 	bool isAquired();
 	bool isTracked();
