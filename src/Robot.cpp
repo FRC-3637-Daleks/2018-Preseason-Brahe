@@ -123,7 +123,10 @@ public:
 	void
 	AutonomousMobility()
 	{
+		// Thing 1
 		static double travel_distance = 10600;
+		// Thing 2
+		// static double travel_distance = XXXXX;
 		double ldist, rdist, distance;
 
         ldist = abs(leftMotor->GetEncPosition());
@@ -139,11 +142,17 @@ public:
 	void
 	AutonomousGearPlacement()
 	{
-		static double arc_distance = 12800, center_distance = 8000;
+		// Thing 1 - note center distance is unknown at this point
+		static double arc_distance = 12300, center_distance = 8000;
+		// Thing 2
+		//static double arc_distance = 15800, center_distance = 10000;
 		static bool target_acquired = false;
-        static double backup_distance;
+		static double backup_distance;
 		double ldist, rdist, distance, req_distance;
-		double arc_speed = -0.6, arc_curve = 0.75, center_speed = -0.5;
+		// Thing 1
+		double arc_speed = -0.66, arc_curve = 0.56, center_speed = -0.5;
+		// Thing 2
+		//double arc_speed = -0.6, arc_curve = 0.75, center_speed = -0.5;
 		double target_angle, target_dist;
 
 		ldist = abs(leftMotor->GetEncPosition());
