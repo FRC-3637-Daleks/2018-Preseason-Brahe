@@ -206,7 +206,7 @@ Target::targetDistance()
 			ratio = ((float)RESOLUTION_Y/2.0 -  (float)(m_r1.tl().y))/(float)RESOLUTION_Y;
 			angle = ratio * (float)FOV_V;
 			frc::SmartDashboard::PutNumber("Dangle", angle);
-			m_distance = opp_side / tan((angle/180.0)*(2*3.1415926));
+			m_distance = opp_side / tan((angle/180.0) * 3.1415926);
 			return m_distance;
 		default:
 			break;
