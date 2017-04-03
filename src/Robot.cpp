@@ -38,10 +38,16 @@ public:
 	int startPosition;
 	bool autoGear;
 	int autoStage;
+	bool mobilityDone, turnStart, turnDone, clawDone, BACKUP;
 
 	void
 	RobotInit()
 	{
+		BACKUP = false;
+		mobilityDone = false;
+		clawDone     = false;
+		turnDone	 = false;
+		turnStart	 = false;
 		leftMotor     = new CANTalon(LEFT_DRIVEMOTOR);
 		leftSlave     = new CANTalon(LEFT_SLAVEMOTOR);
 		rightMotor    = new CANTalon(RIGHT_DRIVEMOTOR);
@@ -93,6 +99,12 @@ public:
 	AutonomousInit()
 	{
 	    // get autonomous start position
+		mobilityDone = false;
+		clawDone     = false;
+		turnDone	 = false;
+		mobilityDone = false;
+		BACKUP		 = false;
+		turnStart	 = false;
 		std::string loc = autoLocation.GetSelected();
 		if(loc == LEFT_POSITION)
 			startPosition = 0;
@@ -133,10 +145,16 @@ public:
         rdist = abs(rightMotor->GetEncPosition());
         distance = (ldist >  rdist) ? ldist : rdist;
 
-        if(distance < travel_distance)
+        if(distance < travel_distance){
         	d->SetLeftRightMotorOutputs(-0.5, -0.5);
-        else
+        	mobilityDone = false;
+        }
+        else {
         	d->SetLeftRightMotorOutputs(0.0, 0.0);
+        	mobilityDone = true;
+        }
+
+
 	}
 
 	void
@@ -234,10 +252,152 @@ public:
 	void
 	AutonomousPeriodic()
 	{
-		if(!autoGear)
+		if(!autoGear){
 			AutonomousMobility();
-		else
-			AutonomousGearPlacement();
+		}
+		else{
+			if(startPosition == 1){
+				if(!clawDone){
+					AutonomousMobility();
+				}
+				if (mobilityDone){
+					Wait(.2);
+					claw->DeployMode();
+					Wait(.2);
+					claw->OpenClaw();
+					Wait(1);
+					clawDone = true;
+					rightMotor->SetEncPosition(0);
+					leftMotor->SetEncPosition(0);
+				}
+				if (clawDone){
+					// Thing 1
+					//adding 1345
+					static double travel_distance = 1000;
+					// Thing 2
+					// static double travel_distance = XXXXX;
+					double ldist, rdist, distance;
+
+					ldist = abs(leftMotor->GetEncPosition());
+					rdist = abs(rightMotor->GetEncPosition());
+					distance = (ldist >  rdist) ? ldist : rdist;
+
+					if(distance < travel_distance){
+						d->SetLeftRightMotorOutputs(0.3, 0.3);
+					}
+					else{
+						d->SetLeftRightMotorOutputs(0, 0);
+					}
+					mobilityDone = false;
+				}
+			}
+			else{
+				if(!mobilityDone){
+					// Thing 1
+					static double travel_distance = 8341;
+					// Thing 2
+					// static double travel_distance = XXXXX;
+					double ldist, rdist, distance;
+
+					ldist = abs(leftMotor->GetEncPosition());
+					rdist = abs(rightMotor->GetEncPosition());
+					distance = (ldist >  rdist) ? ldist : rdist;
+
+					if(distance < travel_distance){
+						d->SetLeftRightMotorOutputs(-0.5, -0.5);
+						mobilityDone = false;
+					}
+					else {
+						d->SetLeftRightMotorOutputs(0.0, 0.0);
+						turnStart = true;
+						mobilityDone = true;
+					}
+				}
+				if(turnStart){
+					// Thing 1
+					//adding 1345
+					static double travel_distance = 8901;
+					// Thing 2
+					// static double travel_distance = XXXXX;
+						double ldist, rdist, distance;
+
+						ldist = abs(leftMotor->GetEncPosition());
+						rdist = abs(rightMotor->GetEncPosition());
+						distance = (ldist >  rdist) ? ldist : rdist;
+
+						if(distance < travel_distance){
+							if(startPosition == 2){
+								d->SetLeftRightMotorOutputs(0.5, -0.5);
+							}
+							else{
+								d->SetLeftRightMotorOutputs(-0.5, 0.5);
+							}
+							turnStart = true;
+						}
+						else {
+							d->SetLeftRightMotorOutputs(0.0, 0.0);
+							turnStart = false;
+							turnDone = true;
+						}
+				}
+
+				if (turnDone){
+					// Thing 1
+					//adding 1345
+					static double travel_distance = 13717;
+					// Thing 2
+					// static double travel_distance = XXXXX;
+					double ldist, rdist, distance;
+
+					ldist = abs(leftMotor->GetEncPosition());
+					rdist = abs(rightMotor->GetEncPosition());
+					distance = (ldist >  rdist) ? ldist : rdist;
+
+					if(distance < travel_distance){
+						d->SetLeftRightMotorOutputs(-0.5, -0.5);
+						turnDone = true;
+					}
+					else {
+						d->SetLeftRightMotorOutputs(0.0, 0.0);
+						turnDone = false;
+						clawDone = true;
+					}
+
+				}
+				if(clawDone){
+					claw->DeployMode();
+					Wait(.2);
+					claw->OpenClaw();
+					Wait(1);
+					BACKUP = true;
+					clawDone = false;
+
+				}
+				if(BACKUP){
+					// Thing 1
+					//adding 1345
+					static double travel_distance = 8901;
+					// Thing 2
+					// static double travel_distance = XXXXX;
+					double ldist, rdist, distance;
+
+					ldist = abs(leftMotor->GetEncPosition());
+					rdist = abs(rightMotor->GetEncPosition());
+					distance = (ldist >  rdist) ? ldist : rdist;
+
+					if(distance > travel_distance){
+						d->SetLeftRightMotorOutputs(0.3, 0.3);
+					}
+					else {
+						d->SetLeftRightMotorOutputs(0.0, 0.0);
+						BACKUP = false;
+					}
+
+				}
+
+			}
+		}
+
 		return;
     }
 
@@ -322,6 +482,17 @@ public:
 		if(rightJoystick->GetRawButton(2))
 			claw->SetCameraView(FRONT_VIEW_POSITION);
 
+		if(xbox->GetPOV(0)==0){
+
+			claw->SetCameraView(claw->GetCameraView()-.01);
+		}
+		if(xbox->GetPOV(0)==180){
+			claw->SetCameraView(claw->GetCameraView()+.01);
+		}
+		if(xbox->GetPOV(0)==90){
+			d->SetLeftRightMotorOutputs(-.5, .5);
+		}
+
 		++teleopCnt;
 		if((teleopCnt % 10) == 0)
 			DashboardUpdates();
@@ -350,6 +521,8 @@ public:
 		frc::SmartDashboard::PutBoolean("At Top", climb->IsAtTop());
 		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
+		frc::SmartDashboard::PutNumber("Distance", rightMotor->GetEncPosition());
+		frc::SmartDashboard::PutNumber("Servo Angle", claw->GetCameraView());
 	}
 
 private:

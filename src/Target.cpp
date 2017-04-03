@@ -38,16 +38,16 @@ Target::visionThread(void *t)
     cs::UsbCamera camera0 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam0);
     cs::UsbCamera camera1 = CameraServer::GetInstance()->StartAutomaticCapture(myt->m_cam1);
 
-    camera0.SetResolution(640, 480);
+    camera0.SetResolution(320, 240);
     camera0.SetBrightness(45);
     camera0.SetExposureAuto();
-    camera1.SetResolution(640, 480);
+    camera1.SetResolution(320, 240);
     camera1.SetBrightness(45);
     camera1.SetExposureAuto();
 
 	server = CameraServer::GetInstance()->GetServer();
 	cvSink = CameraServer::GetInstance()->GetVideo();
-	cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Processed", 640, 480);
+	cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Processed", 320, 240);
 
     while(true) {
 		switch(myt->m_feed) {

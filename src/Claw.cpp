@@ -117,7 +117,10 @@ Claw::SetCameraView(double angle)
 {
 	m_cameraServo->Set(angle);
 }
-
+double
+Claw::GetCameraView(){
+	return m_cameraServo->Get();
+}
 bool
 Claw::IsOpen()
 {

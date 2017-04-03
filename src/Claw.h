@@ -31,6 +31,7 @@ public:
 	void GroundMode();
 	void TravelMode();
 	void SetCameraView(double angle);
+	double GetCameraView();
 	void ServoDown();
 	bool IsOpen();
 	bool IsClosed();
