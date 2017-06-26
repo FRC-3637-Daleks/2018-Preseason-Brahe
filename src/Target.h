@@ -22,10 +22,11 @@
 #define FOV_V 49.5
 #define FOV_H 63.1
 // Resolution dimensions in pixels
-#define RESOLUTION_X 640
-#define RESOLUTION_Y 480
+#define RESOLUTION_X 320
+#define RESOLUTION_Y 240
 // Height to Width ratio has to be less than this percentage different from real ration (5 to 2) to be a match
-#define HW_RATIO_TOLERANCE 0.4
+#define HW_RATIO_TOLERANCE .4
+
 // Actual height to width ratio of rectangle of reflective tape
 #define TARGET_HW_RATIO 2.5
 // Areas of smaller target must be less than this percentage different from larger taret to be a match
@@ -49,8 +50,12 @@ public:
 	bool isLooking();
 	double targetDistance();
 	double targetAngle();
+	void setExposure(double e);
+	void autoExposure();
+	double getMidX();
 	cv::Rect getR1();
 	cv::Rect getR2();
+	double getArea();
 
 private:
 	cv::Rect m_r1, m_r2;

@@ -37,17 +37,16 @@ public:
 	cv::Rect r1, r2;
 	int startPosition;
 	bool autoGear;
+	bool testFinal;
 	int autoStage;
-	bool mobilityDone, turnStart, turnDone, clawDone, BACKUP;
-
+	bool forwardDone, turnDone, pegDone, clawDone, backupDone, midTurn, midGo;
+	int clawMode, autonomousAlign;
+	double exposure;
+	int autoPos;
 	void
 	RobotInit()
 	{
-		BACKUP = false;
-		mobilityDone = false;
-		clawDone     = false;
-		turnDone	 = false;
-		turnStart	 = false;
+		exposure = 1;
 		leftMotor     = new CANTalon(LEFT_DRIVEMOTOR);
 		leftSlave     = new CANTalon(LEFT_SLAVEMOTOR);
 		rightMotor    = new CANTalon(RIGHT_DRIVEMOTOR);
@@ -70,10 +69,20 @@ public:
 		autoLocation.AddObject("Right", RIGHT_POSITION);
 		frc::SmartDashboard::PutData("Autonomous Starting Location", &autoLocation);
 
+		autoLocation2.AddObject("Boiler Side", 1);
+		autoLocation2.AddDefault("Gear Side", 0);
+		frc::SmartDashboard::PutData("Autonomous Starting Location 2", &autoLocation2);
 		autoMode.AddObject("Gear Placement", GEAR_HANDLING);
 		autoMode.AddDefault("Mobility", MOBILITY);
 		frc::SmartDashboard::PutData("Autonomous Mode", &autoMode);
 
+		autoClaw.AddObject("Close Claw", 1);
+		autoClaw.AddDefault("Open Claw", 0);
+		frc::SmartDashboard::PutData("Autonomous Claw Mode", &autoClaw);
+
+		autoAlign.AddObject("With Camera", 1);
+		autoAlign.AddDefault("Dead Reckoning", 0);
+		frc::SmartDashboard::PutData("Align Mode", &autoAlign);
 		lw->AddActuator("light switch", "light switch", lightswitch);
 	}
 
@@ -99,13 +108,17 @@ public:
 	AutonomousInit()
 	{
 	    // get autonomous start position
-		mobilityDone = false;
-		clawDone     = false;
-		turnDone	 = false;
-		mobilityDone = false;
-		BACKUP		 = false;
-		turnStart	 = false;
+		forwardDone	 = false;
+		turnDone	 = true;
+		pegDone  	 = true;
+		clawDone	 = true;
+		backupDone	 = true;
+		midTurn = true;
+		midGo = true;
+		clawMode 	 = autoClaw.GetSelected();
+		autonomousAlign = autoAlign.GetSelected();
 		std::string loc = autoLocation.GetSelected();
+		autoPos = autoLocation2.GetSelected();
 		if(loc == LEFT_POSITION)
 			startPosition = 0;
 		else if (loc == CENTER_POSITION)
@@ -130,13 +143,14 @@ public:
 		d->ShiftGear(HIGH_GEAR);
 		lightswitch->Set(Relay::kReverse);
         targeter->switchCam(FRONT_CAMERA);
+        targeter->autoExposure();
 	}
 
-	void
-	AutonomousMobility()
+	bool
+	AutonomousMobility(double dist, double lSpeed, double rSpeed)
 	{
 		// Thing 1
-		static double travel_distance = 10600;
+		double travel_distance = dist;
 		// Thing 2
 		// static double travel_distance = XXXXX;
 		double ldist, rdist, distance;
@@ -146,12 +160,14 @@ public:
         distance = (ldist >  rdist) ? ldist : rdist;
 
         if(distance < travel_distance){
-        	d->SetLeftRightMotorOutputs(-0.5, -0.5);
-        	mobilityDone = false;
+        	d->SetLeftRightMotorOutputs(lSpeed, rSpeed);
+        	return false;
         }
         else {
         	d->SetLeftRightMotorOutputs(0.0, 0.0);
-        	mobilityDone = true;
+        	rightMotor->SetPosition(0);
+        	leftMotor->SetPosition(0);
+        	return true;
         }
 
 
@@ -248,152 +264,197 @@ public:
         else
         	d->SetLeftRightMotorOutputs(0.0, 0.0);
 	}
+	bool
+	CameraAlignForward(double areaDone, double lSpeed, double rSpeed){
+		double l = lSpeed;
+		double r = rSpeed;
+		int done = 1000;
+		int area = targeter->getArea();
+		int dev = 95 - targeter->getMidX();
+		frc::SmartDashboard::PutNumber("Area", targeter->getArea());
+		frc::SmartDashboard::PutNumber("Midpoint", targeter->getMidX());
+
+		/*if(dev>0){
+			r+=-((double)(dev/10))/100;
+		}
+		else if(dev<0){
+			l+=-((double)(dev/10))/100;
+		}*/
+		if(!(area>areaDone)){
+			d->SetLeftRightMotorOutputs(l, r);
+			return false;
+		}
+		else{
+			return true;
+		}
+
+	}
+	bool
+	CameraAlignRotate(double lSpeed, double rSpeed){
+		double l = abs(lSpeed);
+		double r = abs(rSpeed);
+		int done = 1000;
+		int dev = 160 - targeter->getMidX();
+		if(dev>50){
+			d->SetLeftRightMotorOutputs(l, -r);
+			return false;
+		}
+		else if(dev<-50){
+			d->SetLeftRightMotorOutputs(-l, r);
+			return false;
+		}
+		else{
+			return true;
+		}
+
+	}
 
 	void
 	AutonomousPeriodic()
 	{
+		frc::SmartDashboard::PutNumber("Start Position", startPosition);
+		frc::SmartDashboard::PutNumber("claw mode", clawMode);
+		frc::SmartDashboard::PutNumber("auto align", autonomousAlign);
+		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetEncPosition());
+		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetEncPosition());
+
 		if(!autoGear){
-			AutonomousMobility();
+			AutonomousMobility(10600, -.5, -.5);
 		}
 		else{
 			if(startPosition == 1){
-				if(!clawDone){
-					AutonomousMobility();
-				}
-				if (mobilityDone){
-					Wait(.2);
-					claw->DeployMode();
-					Wait(.2);
-					claw->OpenClaw();
-					Wait(1);
-					clawDone = true;
-					rightMotor->SetEncPosition(0);
-					leftMotor->SetEncPosition(0);
-				}
-				if (clawDone){
-					// Thing 1
-					//adding 1345
-					static double travel_distance = 1000;
-					// Thing 2
-					// static double travel_distance = XXXXX;
-					double ldist, rdist, distance;
-
-					ldist = abs(leftMotor->GetEncPosition());
-					rdist = abs(rightMotor->GetEncPosition());
-					distance = (ldist >  rdist) ? ldist : rdist;
-
-					if(distance < travel_distance){
-						d->SetLeftRightMotorOutputs(0.3, 0.3);
+				if(!forwardDone){
+					if(autonomousAlign == 0){
+						forwardDone = AutonomousMobility(9000, -.5, -.5);
 					}
 					else{
-						d->SetLeftRightMotorOutputs(0, 0);
+						forwardDone = CameraAlignForward(5500, -.5, -.5);
 					}
-					mobilityDone = false;
+					if (forwardDone){
+						clawDone = false;
+					}
+				}
+				if (!clawDone){
+					if(clawMode == 0){
+						Wait(.2);
+						claw->DeployMode();
+						Wait(.5);
+						claw->OpenClaw();
+						rightMotor->SetPosition(0);
+						leftMotor->SetPosition(0);
+						Wait(1);
+						backupDone = false;
+
+					}
+					clawDone = true;
+
+				}
+				if (!backupDone){
+
+					backupDone = AutonomousMobility(3000, 1, 1);
 				}
 			}
 			else{
-				if(!mobilityDone){
-					// Thing 1
-					static double travel_distance = 8341;
-					// Thing 2
-					// static double travel_distance = XXXXX;
-					double ldist, rdist, distance;
+				if(!forwardDone){
 
-					ldist = abs(leftMotor->GetEncPosition());
-					rdist = abs(rightMotor->GetEncPosition());
-					distance = (ldist >  rdist) ? ldist : rdist;
-
-					if(distance < travel_distance){
-						d->SetLeftRightMotorOutputs(-0.5, -0.5);
-						mobilityDone = false;
+					if(autoPos==0){
+						//gear chute
+						forwardDone = AutonomousMobility(8000, -1, -1);
+						//forwardDone = AutonomousMobility(8800, -.5, -.5);
 					}
-					else {
-						d->SetLeftRightMotorOutputs(0.0, 0.0);
-						turnStart = true;
-						mobilityDone = true;
+					else{
+						//boiler
+						forwardDone = AutonomousMobility(7800, -1, -1);
 					}
-				}
-				if(turnStart){
-					// Thing 1
-					//adding 1345
-					static double travel_distance = 8901;
-					// Thing 2
-					// static double travel_distance = XXXXX;
-						double ldist, rdist, distance;
-
-						ldist = abs(leftMotor->GetEncPosition());
-						rdist = abs(rightMotor->GetEncPosition());
-						distance = (ldist >  rdist) ? ldist : rdist;
-
-						if(distance < travel_distance){
-							if(startPosition == 2){
-								d->SetLeftRightMotorOutputs(0.5, -0.5);
-							}
-							else{
-								d->SetLeftRightMotorOutputs(-0.5, 0.5);
-							}
-							turnStart = true;
-						}
-						else {
-							d->SetLeftRightMotorOutputs(0.0, 0.0);
-							turnStart = false;
-							turnDone = true;
-						}
-				}
-
-				if (turnDone){
-					// Thing 1
-					//adding 1345
-					static double travel_distance = 13717;
-					// Thing 2
-					// static double travel_distance = XXXXX;
-					double ldist, rdist, distance;
-
-					ldist = abs(leftMotor->GetEncPosition());
-					rdist = abs(rightMotor->GetEncPosition());
-					distance = (ldist >  rdist) ? ldist : rdist;
-
-					if(distance < travel_distance){
-						d->SetLeftRightMotorOutputs(-0.5, -0.5);
-						turnDone = true;
-					}
-					else {
-						d->SetLeftRightMotorOutputs(0.0, 0.0);
+					if (forwardDone){
+						Wait(.2);
 						turnDone = false;
-						clawDone = true;
+
 					}
 
 				}
-				if(clawDone){
-					claw->DeployMode();
-					Wait(.2);
-					claw->OpenClaw();
-					Wait(1);
-					BACKUP = true;
-					clawDone = false;
-
-				}
-				if(BACKUP){
-					// Thing 1
-					//adding 1345
-					static double travel_distance = 8901;
-					// Thing 2
-					// static double travel_distance = XXXXX;
-					double ldist, rdist, distance;
-
-					ldist = abs(leftMotor->GetEncPosition());
-					rdist = abs(rightMotor->GetEncPosition());
-					distance = (ldist >  rdist) ? ldist : rdist;
-
-					if(distance > travel_distance){
-						d->SetLeftRightMotorOutputs(0.3, 0.3);
+				if(!turnDone){
+					if(startPosition == 2){
+						//right
+						if(autonomousAlign == 0){
+							turnDone = AutonomousMobility(2100, 1, -1);
+							//turnDone = AutonomousMobility(2400, 1, -1);
+						}
+						else{
+							turnDone = CameraAlignRotate(0.5, -0.5);
+						}
 					}
-					else {
-						d->SetLeftRightMotorOutputs(0.0, 0.0);
-						BACKUP = false;
+					else{
+						//left
+						if(autonomousAlign == 0){
+							turnDone = AutonomousMobility(2400, -.5, .5);
+						}
+						else{
+							turnDone = CameraAlignRotate(-0.5, 0.5);
+						}
 					}
-
+					if (turnDone){
+						Wait(.1);
+						pegDone = false;
+					}
 				}
+
+				if (!pegDone){
+
+					if(autonomousAlign == 0){
+						pegDone = AutonomousMobility(6500, -1, -1);
+					}
+					else{
+						pegDone = CameraAlignForward(2000, -.5, -.5);
+					}
+					if (pegDone){
+						clawDone = false;
+					}
+				}
+				if(!clawDone){
+					if(clawMode == 0){
+						claw->DeployMode();
+						Wait(.2);
+						claw->OpenClaw();
+						backupDone = false;
+
+					}
+					Wait(.5);
+					clawDone = true;
+				}
+				if(!backupDone){
+					backupDone = AutonomousMobility(5000, 1, 1);
+					if(backupDone){
+						midTurn = false;
+						claw->TravelMode();
+						Wait(.1);
+					}
+				}
+				if(!midTurn){
+					if(startPosition == 2){
+						//right
+
+							midTurn = AutonomousMobility(2700, -1, 1);
+
+					}
+					else{
+						//left
+
+							midTurn = AutonomousMobility(2700, 1, -1);
+
+
+					}
+					if (midTurn){
+						Wait(.1);
+						midGo = false;
+						d->ShiftGear(LOW_GEAR);
+					}
+				}
+				if(!midGo){
+
+					midGo = AutonomousMobility(14000, -1, -1);
+				}
+
 
 			}
 		}
@@ -407,7 +468,10 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
+		targeter->autoExposure();
 		lightswitch->Set(Relay::kForward);
+		testFinal = false;
+
 	}
 
 	void
@@ -476,6 +540,12 @@ public:
 		   (rightJoystick->GetTop())) {
 			targeter->switchCam(REAR_CAMERA);
 		}
+		if(leftJoystick->GetRawButton(3)){
+			rightMotor->SetPosition(0);
+		}
+		if(rightJoystick->GetRawButton(3)){
+			leftMotor->SetPosition(0);
+		}
 
 		if(leftJoystick->GetRawButton(2))
 			claw->SetCameraView(GROUND_VIEW_POSITION);
@@ -483,16 +553,41 @@ public:
 			claw->SetCameraView(FRONT_VIEW_POSITION);
 
 		if(xbox->GetPOV(0)==0){
+			claw->SetCameraView(FRONT_VIEW_POSITION);
 
-			claw->SetCameraView(claw->GetCameraView()-.01);
+
+
+
+			//claw->SetCameraView(claw->GetCameraView()-.01);
+
 		}
 		if(xbox->GetPOV(0)==180){
-			claw->SetCameraView(claw->GetCameraView()+.01);
-		}
-		if(xbox->GetPOV(0)==90){
-			d->SetLeftRightMotorOutputs(-.5, .5);
+			claw->SetCameraView(GROUND_VIEW_POSITION);
+
+
+			//claw->SetCameraView(claw->GetCameraView()+.01);
 		}
 
+		if(xbox->GetPOV(0)==90 && !testFinal){
+			//targeter->autoExposure();
+			//lightswitch->Set(Relay::kForward);
+			//d->ShiftGear(LOW_GEAR);
+			//testFinal = AutonomousMobility(10000, -1, -1);
+
+		}
+		if(xbox->GetPOV(0)==270){
+
+				testFinal = false;
+
+
+		}
+
+		if(claw->GearPresent()){
+			lightswitch->Set(Relay::kReverse);
+		}
+		else{
+			lightswitch->Set(Relay::kForward);
+		}
 		++teleopCnt;
 		if((teleopCnt % 10) == 0)
 			DashboardUpdates();
@@ -523,12 +618,17 @@ public:
 		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
 		frc::SmartDashboard::PutNumber("Distance", rightMotor->GetEncPosition());
 		frc::SmartDashboard::PutNumber("Servo Angle", claw->GetCameraView());
+		frc::SmartDashboard::PutNumber("Area", targeter->getArea());
+		frc::SmartDashboard::PutNumber("Midpoint", targeter->getMidX());
 	}
 
 private:
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> autoLocation;
+	frc::SendableChooser<int> autoLocation2;
 	frc::SendableChooser<std::string> autoMode;
+	frc::SendableChooser<int> autoClaw;
+	frc::SendableChooser<int> autoAlign;
 
 };
 

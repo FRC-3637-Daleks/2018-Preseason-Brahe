@@ -1,26 +1,32 @@
 #include "GripPipeline.h"
+/**
+* Initializes a GripPipeline.
+*/
 
 namespace grip {
 
 GripPipeline::GripPipeline() {
 }
 /**
-* Runs an iteration of the pipeline and updates outputs.
+* Runs an iteration of the Pipeline and updates outputs.
+*
+* Sources need to be set before calling this method. 
+*
 */
-void GripPipeline::Process(cv::Mat& source0){
-	//Step HSL_Threshold0:
+void GripPipeline::process(cv::Mat source0){
+	//Step RGB_Threshold0:
 	//input
-	cv::Mat hslThresholdInput = source0;
-	double hslThresholdHue[] = {63.129496402877685, 132.38907849829351};
-	double hslThresholdSaturation[] = {158.22841726618702, 255.0};
-	double hslThresholdLuminance[] = {146.76258992805754, 255.0};
-	hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, this->hslThresholdOutput);
+	cv::Mat rgbThresholdInput = source0;
+	double rgbThresholdRed[] = {0.0, 255.0};
+	double rgbThresholdGreen[] = {210.97122302158272, 255.0};
+	double rgbThresholdBlue[] = {0, 255.0};
+	rgbThreshold(rgbThresholdInput, rgbThresholdRed, rgbThresholdGreen, rgbThresholdBlue, this->rgbThresholdOutput);
 	//Step CV_erode0:
 	//input
-	cv::Mat cvErodeSrc = hslThresholdOutput;
+	cv::Mat cvErodeSrc = rgbThresholdOutput;
 	cv::Mat cvErodeKernel;
 	cv::Point cvErodeAnchor(-1, -1);
-	double cvErodeIterations = 5.0;  // default Double
+	double cvErodeIterations = 2.0;  // default Double
     int cvErodeBordertype = cv::BORDER_CONSTANT;
 	cv::Scalar cvErodeBordervalue(-1);
 	cvErode(cvErodeSrc, cvErodeKernel, cvErodeAnchor, cvErodeIterations, cvErodeBordertype, cvErodeBordervalue, this->cvErodeOutput);
@@ -29,7 +35,7 @@ void GripPipeline::Process(cv::Mat& source0){
 	cv::Mat cvDilateSrc = cvErodeOutput;
 	cv::Mat cvDilateKernel;
 	cv::Point cvDilateAnchor(-1, -1);
-	double cvDilateIterations = 15.0;  // default Double
+	double cvDilateIterations = 4.0;  // default Double
     int cvDilateBordertype = cv::BORDER_CONSTANT;
 	cv::Scalar cvDilateBordervalue(-1);
 	cvDilate(cvDilateSrc, cvDilateKernel, cvDilateAnchor, cvDilateIterations, cvDilateBordertype, cvDilateBordervalue, this->cvDilateOutput);
@@ -41,46 +47,52 @@ void GripPipeline::Process(cv::Mat& source0){
 }
 
 /**
- * This method is a generated getter for the output of a HSL_Threshold.
- * @return Mat output from HSL_Threshold.
+ * This method is a generated setter for source0.
+ * @param source the Mat to set
  */
-cv::Mat* GripPipeline::GetHslThresholdOutput(){
-	return &(this->hslThresholdOutput);
+void GripPipeline::setsource0(cv::Mat &source0){
+	source0.copyTo(this->source0);
+}
+/**
+ * This method is a generated getter for the output of a RGB_Threshold.
+ * @return Mat output from RGB_Threshold.
+ */
+cv::Mat* GripPipeline::getrgbThresholdOutput(){
+	return &(this->rgbThresholdOutput);
 }
 /**
  * This method is a generated getter for the output of a CV_erode.
  * @return Mat output from CV_erode.
  */
-cv::Mat* GripPipeline::GetCvErodeOutput(){
+cv::Mat* GripPipeline::getcvErodeOutput(){
 	return &(this->cvErodeOutput);
 }
 /**
  * This method is a generated getter for the output of a CV_dilate.
  * @return Mat output from CV_dilate.
  */
-cv::Mat* GripPipeline::GetCvDilateOutput(){
+cv::Mat* GripPipeline::getcvDilateOutput(){
 	return &(this->cvDilateOutput);
 }
 /**
  * This method is a generated getter for the output of a Find_Contours.
  * @return ContoursReport output from Find_Contours.
  */
-std::vector<std::vector<cv::Point> >* GripPipeline::GetFindContoursOutput(){
+std::vector<std::vector<cv::Point> >* GripPipeline::getfindContoursOutput(){
 	return &(this->findContoursOutput);
 }
 	/**
-	 * Segment an image based on hue, saturation, and luminance ranges.
+	 * Segment an image based on color ranges.
 	 *
-	 * @param input The image on which to perform the HSL threshold.
-	 * @param hue The min and max hue.
-	 * @param sat The min and max saturation.
-	 * @param lum The min and max luminance.
+	 * @param input The image on which to perform the RGB threshold.
+	 * @param red The min and max red.
+	 * @param green The min and max green.
+	 * @param blue The min and max blue.
 	 * @param output The image in which to store the output.
 	 */
-	//void hslThreshold(Mat *input, double hue[], double sat[], double lum[], Mat *out) {
-	void GripPipeline::hslThreshold(cv::Mat &input, double hue[], double sat[], double lum[], cv::Mat &out) {
-		cv::cvtColor(input, out, cv::COLOR_BGR2HLS);
-		cv::inRange(out, cv::Scalar(hue[0], lum[0], sat[0]), cv::Scalar(hue[1], lum[1], sat[1]), out);
+	void GripPipeline::rgbThreshold(cv::Mat &input, double red[], double green[], double blue[], cv::Mat &output) {
+		cv::cvtColor(input, output, cv::COLOR_BGR2RGB);
+		cv::inRange(output, cv::Scalar(red[0], green[0], blue[0]), cv::Scalar(red[1], green[1], blue[1]), output);
 	}
 
 	/**
@@ -129,5 +141,4 @@ std::vector<std::vector<cv::Point> >* GripPipeline::GetFindContoursOutput(){
 
 
 } // end grip namespace
-
 

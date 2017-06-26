@@ -9,7 +9,7 @@
 #include <Brahe.h>
 
 #define INDEX_SPEED -0.3
-#define CLIMB_SPEED -0.9
+#define CLIMB_SPEED -1
 
 class Climber
 {
