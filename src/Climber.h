@@ -16,8 +16,8 @@ class Climber
     public:
 		enum climbState { INDEXING, INDEXED, CLIMBING, AT_TOP, STOP, NUM_CLIMB_STATES };
 		Climber(int climbMotor, int piston, int magswitch, int climbswitch);
-		Climber(CANTalon *climbMotor, Solenoid *piston, int magswitch, int climbswitch);
-		Climber(CANTalon &climbMotor, Solenoid &piston, int magswitch, int climbswitch);
+		Climber(WPI_TalonSRX *climbMotor, Solenoid *piston, int magswitch, int climbswitch);
+		Climber(WPI_TalonSRX &climbMotor, Solenoid &piston, int magswitch, int climbswitch);
 		~Climber();
 		void GrabRope();
 		void ReleaseRope();
@@ -28,14 +28,13 @@ class Climber
 		void Stop();
 
     private:
-		CANTalon *m_climb;
+		WPI_TalonSRX *m_climb;
 		Solenoid *m_piston;
 		DigitalInput *m_index;
 		DigitalInput *m_kswitch;
 		bool m_needFree;
 		enum climbState m_state;
 
-        frc::LiveWindow* lw = LiveWindow::GetInstance();
         void climberInit();
         static void climbIndexer(void *c);
 };

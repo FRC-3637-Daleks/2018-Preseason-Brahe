@@ -6,18 +6,17 @@
  */
 
 #include <DalekDrive.h>
-#include <CANTalon.h>
 
 using namespace frc;
 
 DalekDrive::DalekDrive(int leftMotorChannel, int rightMotorChannel)
 {
-	m_leftMotor       = new CANTalon(leftMotorChannel);
-	m_rightMotor      = new CANTalon(rightMotorChannel);
+	m_leftMotor       = new WPI_TalonSRX(leftMotorChannel);
+	m_rightMotor      = new WPI_TalonSRX(rightMotorChannel);
 	m_leftSlaveMotor  = NULL;
 	m_rightSlaveMotor = NULL;
 	m_gearShift       = NULL;
-	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
+	m_drive           = new DifferentialDrive(*m_leftMotor, *m_rightMotor);
 	InitDalekDrive();
 
 	m_needFree = true;
@@ -27,45 +26,45 @@ DalekDrive::DalekDrive(int leftMotorChannel, int leftSlaveMotorChannel,
          int rightMotorChannel, int rightSlaveMotorChannel,
 		 int shiftChannel)
 {
-	m_leftMotor       = new CANTalon(leftMotorChannel);
-	m_rightMotor      = new CANTalon(rightMotorChannel);
-	m_leftSlaveMotor  = new CANTalon(leftSlaveMotorChannel);
-	m_rightSlaveMotor = new CANTalon(rightSlaveMotorChannel);
+	m_leftMotor       = new WPI_TalonSRX(leftMotorChannel);
+	m_rightMotor      = new WPI_TalonSRX(rightMotorChannel);
+	m_leftSlaveMotor  = new WPI_TalonSRX(leftSlaveMotorChannel);
+	m_rightSlaveMotor = new WPI_TalonSRX(rightSlaveMotorChannel);
 	m_gearShift       = new Solenoid(PCM_ID, shiftChannel);
-	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
+	m_drive           = new DifferentialDrive(*m_leftMotor, *m_rightMotor);
 	InitDalekDrive();
 
 	m_needFree = true;
 }
 
-DalekDrive::DalekDrive(CANTalon* leftMotor, CANTalon* rightMotor)
+DalekDrive::DalekDrive(WPI_TalonSRX* leftMotor, WPI_TalonSRX* rightMotor)
 {
 	m_leftMotor       = leftMotor;
 	m_rightMotor      = rightMotor;
 	m_leftSlaveMotor  = NULL;
 	m_rightSlaveMotor = NULL;
 	m_gearShift       = NULL;
-	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
+	m_drive           = new DifferentialDrive(*m_leftMotor, *m_rightMotor);
 	InitDalekDrive();
 
 	m_needFree = false;
 }
 
-DalekDrive::DalekDrive(CANTalon& leftMotor, CANTalon& rightMotor)
+DalekDrive::DalekDrive(WPI_TalonSRX& leftMotor, WPI_TalonSRX& rightMotor)
 {
 	m_leftMotor       = &leftMotor;
 	m_rightMotor      = &rightMotor;
 	m_leftSlaveMotor  = NULL;
 	m_rightSlaveMotor = NULL;
 	m_gearShift       = NULL;
-	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
+	m_drive           = new DifferentialDrive(*m_leftMotor, *m_rightMotor);
 	InitDalekDrive();
 
 	m_needFree = false;
 }
 
-DalekDrive::DalekDrive(CANTalon* leftMotor, CANTalon* leftSlaveMotor,
-         CANTalon* rightMotor, CANTalon* rightSlaveMotor,
+DalekDrive::DalekDrive(WPI_TalonSRX* leftMotor, WPI_TalonSRX* leftSlaveMotor,
+		WPI_TalonSRX* rightMotor, WPI_TalonSRX* rightSlaveMotor,
 		 int shiftChannel)
 {
 	m_leftMotor       = leftMotor;
@@ -73,14 +72,14 @@ DalekDrive::DalekDrive(CANTalon* leftMotor, CANTalon* leftSlaveMotor,
 	m_rightMotor      = rightMotor;
 	m_rightSlaveMotor = rightSlaveMotor;
 	m_gearShift       = new Solenoid(PCM_ID, shiftChannel);
-	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
+	m_drive           = new DifferentialDrive(*m_leftMotor, *m_rightMotor);
 	InitDalekDrive();
 
 	m_needFree = false;
 }
 
-DalekDrive::DalekDrive(CANTalon& leftMotor, CANTalon& leftSlaveMotor,
-         CANTalon& rightMotor, CANTalon& rightSlaveMotor,
+DalekDrive::DalekDrive(WPI_TalonSRX& leftMotor, WPI_TalonSRX& leftSlaveMotor,
+		WPI_TalonSRX& rightMotor, WPI_TalonSRX& rightSlaveMotor,
 		 int shiftChannel)
 {
 	m_leftMotor       = &leftMotor;
@@ -88,7 +87,7 @@ DalekDrive::DalekDrive(CANTalon& leftMotor, CANTalon& leftSlaveMotor,
 	m_rightMotor      = &rightMotor;
 	m_rightSlaveMotor = &rightSlaveMotor;
 	m_gearShift       = new Solenoid(PCM_ID, shiftChannel);
-	m_drive           = new RobotDrive(m_leftMotor, m_rightMotor);
+	m_drive           = new DifferentialDrive(*m_leftMotor, *m_rightMotor);
 	InitDalekDrive();
 
 	m_needFree = false;
@@ -115,7 +114,7 @@ void
 DalekDrive::Drive(double outputMagnitude, double curve)
 {
 	if(m_drive)
-		m_drive->Drive(outputMagnitude, curve);
+		m_drive->CurvatureDrive(outputMagnitude, curve, false);
 	return;
 }
 
@@ -124,7 +123,7 @@ DalekDrive::TankDrive(GenericHID* leftStick, GenericHID* rightStick,
              bool squaredInputs)
 {
 	if(m_drive)
-		m_drive->TankDrive(leftStick, rightStick, squaredInputs);
+		m_drive->TankDrive(leftStick->GetY(), rightStick->GetY(), squaredInputs);
 }
 
 void
@@ -132,7 +131,7 @@ DalekDrive::TankDrive(GenericHID& leftStick, GenericHID& rightStick,
              bool squaredInputs)
 {
 	if(m_drive)
-		m_drive->TankDrive(leftStick, rightStick, squaredInputs);
+		m_drive->TankDrive(leftStick.GetY(), rightStick.GetY(), squaredInputs);
 }
 
 void
@@ -147,14 +146,14 @@ void
 DalekDrive::ArcadeDrive(GenericHID* stick, bool squaredInputs)
 {
 	if(m_drive)
-		m_drive->ArcadeDrive(stick, squaredInputs);
+		m_drive->ArcadeDrive(stick->GetY(), stick->GetX(), squaredInputs);
 }
 
 void
 DalekDrive::ArcadeDrive(GenericHID& stick, bool squaredInputs)
 {
 	if(m_drive)
-		m_drive->ArcadeDrive(stick, squaredInputs);
+		m_drive->ArcadeDrive(stick.GetY(), stick.GetX(), squaredInputs);
 }
 
 void
@@ -168,8 +167,10 @@ DalekDrive::ArcadeDrive(double moveValue, double rotateValue,
 void
 DalekDrive::SetLeftRightMotorOutputs(double leftOutput, double rightOutput)
 {
-	if(m_drive)
-		m_drive->SetLeftRightMotorOutputs(leftOutput, rightOutput);
+	if(m_drive) {
+		m_leftMotor->Set(leftOutput);
+		m_rightMotor->Set(rightOutput);
+	}
 }
 
 void
@@ -198,13 +199,6 @@ DalekDrive::SetInvertedMotor(MotorType_t motor, bool isInverted)
 }
 
 void
-DalekDrive::SetSensitivity(double sensitivity)
-{
-	if(m_drive)
-		m_drive->SetSensitivity(sensitivity);
-}
-
-void
 DalekDrive::SetMaxOutput(double maxOutput)
 {
 	if(m_drive)
@@ -214,49 +208,50 @@ DalekDrive::SetMaxOutput(double maxOutput)
 void
 DalekDrive::InitDalekDrive(void)
 {
-    // Setup for LiveWindow
-    lw->AddActuator("Drive System Left", "Drive Motor", m_leftMotor);
-    lw->AddActuator("Drive System Right", "Drive Motor", m_rightMotor);
-    if(m_leftSlaveMotor)
-        lw->AddActuator("Drive System Left", "Drive Motor slave", m_leftSlaveMotor);
-    if(m_rightSlaveMotor)
-        lw->AddActuator("Drive System Right", "Drive Motor slave", m_rightSlaveMotor);
-    if(m_gearShift)
-        lw->AddActuator("Gear Shift", "Gear Shift", m_gearShift);
-
 	// Configure the Talon's as needed
-	m_leftMotor->ConfigNeutralMode(CANTalon::kNeutralMode_Brake);
-	m_rightMotor->ConfigNeutralMode(CANTalon::kNeutralMode_Brake);
-	m_leftMotor->ConfigNominalOutputVoltage(0.0f, -0.0f);
-	m_rightMotor->ConfigNominalOutputVoltage(0.0f, -0.0f);
-	m_leftMotor->ConfigPeakOutputVoltage(+12.0f, -12.0f);
-	m_rightMotor->ConfigPeakOutputVoltage(+12.0f, -12.0f);
-	m_leftMotor->SetVoltageRampRate(RAMP_RATE);
-	m_rightMotor->SetVoltageRampRate(RAMP_RATE);
-	m_leftMotor->SetFeedbackDevice(CANTalon::FeedbackDevice::QuadEncoder);
-	m_rightMotor->SetFeedbackDevice(CANTalon::FeedbackDevice::QuadEncoder);
-	m_leftMotor->ConfigEncoderCodesPerRev(ENCODER_TICKS_PER_REV);
-	m_rightMotor->ConfigEncoderCodesPerRev(ENCODER_TICKS_PER_REV);
-	m_leftMotor->SetSensorDirection(true);
-	m_rightMotor->SetSensorDirection(false);
-	m_leftMotor->SetPosition(0);
-	m_rightMotor->SetPosition(0);
+	m_leftMotor->SetNeutralMode(NeutralMode::Brake);
+	m_rightMotor->SetNeutralMode(NeutralMode::Brake);
+	m_leftMotor->ConfigNominalOutputForward(0.0, CANTimeoutMs);
+	m_leftMotor->ConfigNominalOutputReverse(-0.0, CANTimeoutMs);
+	m_rightMotor->ConfigNominalOutputForward(0.0, CANTimeoutMs);
+	m_rightMotor->ConfigNominalOutputReverse(-0.0, CANTimeoutMs);
+	m_leftMotor->ConfigPeakOutputForward(1.0, CANTimeoutMs);
+	m_leftMotor->ConfigPeakOutputReverse(-1.0, CANTimeoutMs);
+	m_rightMotor->ConfigPeakOutputForward(1.0, CANTimeoutMs);
+	m_rightMotor->ConfigPeakOutputReverse(-1.0, CANTimeoutMs);
+	m_leftMotor->ConfigOpenloopRamp(RAMP_RATE, CANTimeoutMs); // TBD: how many MS ???
+	m_rightMotor->ConfigOpenloopRamp(RAMP_RATE, CANTimeoutMs);
+	m_leftMotor->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, PIDLoopIdx, CANTimeoutMs);
+	m_rightMotor->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, PIDLoopIdx, CANTimeoutMs);
+	m_leftMotor->SetSensorPhase(true);
+	m_rightMotor->SetSensorPhase(false);
+	m_leftMotor->SetSelectedSensorPosition(PIDSlotIdx, PIDLoopIdx, CANTimeoutMs);
+	m_rightMotor->SetSelectedSensorPosition(PIDSlotIdx, PIDLoopIdx, CANTimeoutMs);
 	m_leftMotor->SetInverted(false);
 	m_rightMotor->SetInverted(false);
+	m_leftMotor->GetSensorCollection().SetQuadraturePosition(0,0);
+	m_rightMotor->GetSensorCollection().SetQuadraturePosition(0,0);
+
 	if(m_leftSlaveMotor) {
-		m_leftSlaveMotor->SetControlMode(CANTalon::ControlMode::kFollower);
-		m_leftSlaveMotor->Set(m_leftMotor->GetDeviceID());
+		m_leftSlaveMotor->Set(ControlMode::Follower, m_leftMotor->GetDeviceID());
 		m_leftSlaveMotor->SetInverted(false);
-		m_leftSlaveMotor->SetVoltageRampRate(RAMP_RATE);
+		m_leftSlaveMotor->ConfigOpenloopRamp(RAMP_RATE, CANTimeoutMs);
 	}
 	if(m_rightSlaveMotor) {
-		m_rightSlaveMotor->SetControlMode(CANTalon::ControlMode::kFollower);
-		m_rightSlaveMotor->Set(m_rightMotor->GetDeviceID());
+		m_rightSlaveMotor->Set(ControlMode::Follower, m_rightMotor->GetDeviceID());
 		m_rightSlaveMotor->SetInverted(false);
-		m_rightSlaveMotor->SetVoltageRampRate(RAMP_RATE);
+		m_rightSlaveMotor->ConfigOpenloopRamp(RAMP_RATE, CANTimeoutMs);
 	}
 	if(m_gearShift)
 		ShiftGear(HIGH_GEAR);
+}
+
+int
+DalekDrive::GetPosition(MotorType_t motor)
+{
+	if(motor == LEFT_DRIVEMOTOR)
+		return m_leftMotor->GetSensorCollection().GetQuadraturePosition();
+	return m_rightMotor->GetSensorCollection().GetQuadraturePosition();
 }
 
 void
@@ -264,8 +259,10 @@ DalekDrive::ShiftGear(GearType_t speed)
 {
 	// Assumes that the forward setting of the solenoid == HIGH_GEAR
 	if(m_gearShift) {
-		if((m_leftMotor->GetSpeed() > RPM_THRESHOLD) &&
-		   (m_rightMotor->GetSpeed() > RPM_THRESHOLD))
+		double lspeed = m_leftMotor->GetSensorCollection().GetQuadratureVelocity();
+		double rspeed = m_rightMotor->GetSensorCollection().GetQuadratureVelocity();
+
+		if((lspeed > RPM_THRESHOLD) && (rspeed > RPM_THRESHOLD))
 			return;
 		switch(speed) {
 		case HIGH_GEAR:
@@ -280,32 +277,55 @@ DalekDrive::ShiftGear(GearType_t speed)
 	}
 }
 
-void
-DalekDrive::printFaults(MotorType_t p, int faults)
+bool
+DalekDrive::printFaults()
 {
-	if(p == LEFT_DRIVEMOTOR) {
-		frc::SmartDashboard::PutNumber("Left Talon reported faults", faults);
+	Faults f;
+	StickyFaults sf;
+	bool faultFound = false;
+
+	m_leftMotor->GetFaults(f);
+	if(f.HasAnyFault()) {
+		faultFound = true;
+		frc::SmartDashboard::PutNumber("Left Talon reported faults", f.ToBitfield());
 		if(m_leftSlaveMotor) {
+			Faults slave;
+			m_leftSlaveMotor->GetFaults(slave);
 			frc::SmartDashboard::PutNumber("Left slave status",
-					m_leftSlaveMotor->GetFaults());
+					slave.ToBitfield());
 		}
 	}
-	if(p == RIGHT_DRIVEMOTOR) {
-		frc::SmartDashboard::PutNumber("Right Talon reported faults", faults);
+	m_leftMotor->GetStickyFaults(sf);
+	if(sf.HasAnyFault()) {
+		faultFound = true;
+		frc::SmartDashboard::PutNumber("Left Talon reported sticky faults",
+				sf.ToBitfield());
+		m_leftMotor->ClearStickyFaults(0);
+	}
+	m_rightMotor->GetFaults(f);
+	if(f.HasAnyFault()) {
+		faultFound = true;
+		frc::SmartDashboard::PutNumber("Right Talon reported faults", f.ToBitfield());
 		if(m_rightSlaveMotor) {
+			Faults slave;
+			m_rightSlaveMotor->GetFaults(slave);
 			frc::SmartDashboard::PutNumber("Right slave status",
-					m_rightSlaveMotor->GetFaults());
+				slave.ToBitfield());
 		}
 	}
-	return;
+	m_rightMotor->GetStickyFaults(sf);
+	if(sf.HasAnyFault()) {
+		faultFound = true;
+		frc::SmartDashboard::PutNumber("Right Talon reported sticky faults",
+				sf.ToBitfield());
+		m_leftMotor->ClearStickyFaults(0);
+	}
+	return faultFound;
 }
 
 bool
 DalekDrive::DriveOk()
 {
-	CANTalon::FeedbackDeviceStatus estat;
-	int mstat;
-
 	// update dashboard of current draw for motors
 	frc::SmartDashboard::PutNumber("Left Motor current",
 			m_leftMotor->GetOutputCurrent());
@@ -318,36 +338,9 @@ DalekDrive::DriveOk()
 		frc::SmartDashboard::PutNumber("Right Slave Motor current",
 			m_rightSlaveMotor->GetOutputCurrent());
 
-	// check sensor status
-	estat = m_leftMotor->IsSensorPresent(CANTalon::FeedbackDevice::QuadEncoder);
-	if(estat != CANTalon::FeedbackDeviceStatus::FeedbackStatusPresent)
-		return false;
-	estat = m_rightMotor->IsSensorPresent(CANTalon::FeedbackDevice::QuadEncoder);
-	if(estat != CANTalon::FeedbackDeviceStatus::FeedbackStatusPresent)
-		return false;
-
 	// check for motor faults
-	mstat = m_leftMotor->GetFaults();
-	if(mstat != 0) {
-		printFaults(LEFT_DRIVEMOTOR, mstat);
+	if (printFaults())
 		return false;
-	}
-	mstat = m_leftMotor->GetStickyFaults();
-	if(mstat) {
-		printFaults(LEFT_DRIVEMOTOR, mstat);
-		m_leftMotor->ClearStickyFaults();
-		return false;
-	}
 
-	mstat = m_rightMotor->GetFaults();
-	if(mstat) {
-		printFaults(RIGHT_DRIVEMOTOR, mstat);
-		return false;
-	}
-	mstat = m_rightMotor->GetStickyFaults();
-	if(mstat) {
-		printFaults(RIGHT_DRIVEMOTOR, mstat);
-		return false;
-	}
 	return true;
 }

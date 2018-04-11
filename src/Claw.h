@@ -47,6 +47,5 @@ private:
 	Servo *m_cameraServo;
 	PistonState m_state;
 	bool m_needFree;
-	frc::LiveWindow* lw = LiveWindow::GetInstance();
     void clawInit();
 };

@@ -35,7 +35,6 @@ private:
 	double m_leftDistance;
 	double m_rightDistance;
 
-	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	void sensorInit();
 	static void monitorDistance(void *ir);
 };

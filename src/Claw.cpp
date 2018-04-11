@@ -67,11 +67,6 @@ Claw::~Claw()
 void
 Claw::clawInit()
 {
-    lw->AddActuator("Claw Mechanism", "lateral piston", m_piston);
-    lw->AddActuator("Claw Mechanism", "pivot piston", m_pivot);
-    lw->AddActuator("Claw Mechanism", "arm piston", m_arm);
-    lw->AddSensor("Claw Mechanism", "gear present switch", m_gearSwitch);
-    lw->AddActuator("Claw Mechanism", "camera servo", m_cameraServo);
     SetCameraView(FRONT_VIEW_POSITION);
     TravelMode();
 }

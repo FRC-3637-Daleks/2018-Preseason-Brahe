@@ -5,12 +5,11 @@
 #include <math.h>
 
 #include <IterativeRobot.h>
-#include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SendableChooser.h>
 #include <SmartDashboard/SmartDashboard.h>
 
 #include <WPILib.h>
-#include <CANTalon.h>
+#include <ctre/Phoenix.h>
 #include <Brahe.h>
 #include <DalekDrive.h>
 #include <Claw.h>
@@ -23,8 +22,8 @@ class Robot: public frc::IterativeRobot
 {
 public:
 	Compressor *c;
-	CANTalon *leftMotor, *rightMotor, *leftSlave, *rightSlave;
-	CANTalon *climbMotor;
+	WPI_TalonSRX *leftMotor, *rightMotor, *leftSlave, *rightSlave;
+	WPI_TalonSRX *climbMotor;
 	Joystick *leftJoystick, *rightJoystick;
 	XboxController *xbox;
 	DalekDrive *d;
@@ -48,11 +47,11 @@ public:
 		clawDone     = false;
 		turnDone	 = false;
 		turnStart	 = false;
-		leftMotor     = new CANTalon(LEFT_DRIVEMOTOR);
-		leftSlave     = new CANTalon(LEFT_SLAVEMOTOR);
-		rightMotor    = new CANTalon(RIGHT_DRIVEMOTOR);
-		rightSlave    = new CANTalon(RIGHT_SLAVEMOTOR);
-		climbMotor    = new CANTalon(CLIMB_MOTOR);
+		leftMotor     = new WPI_TalonSRX(LEFT_DRIVEMOTOR);
+		leftSlave     = new WPI_TalonSRX(LEFT_SLAVEMOTOR);
+		rightMotor    = new WPI_TalonSRX(RIGHT_DRIVEMOTOR);
+		rightSlave    = new WPI_TalonSRX(RIGHT_SLAVEMOTOR);
+		climbMotor    = new WPI_TalonSRX(CLIMB_MOTOR);
 		climbPiston   = new Solenoid(PCM_ID, CLIMB_SOLENOID);
 		targeter      = new Target(FRONT_CAMERA, REAR_CAMERA);
 		leftJoystick  = new Joystick(LEFT_JOYSTICK);
@@ -73,8 +72,6 @@ public:
 		autoMode.AddObject("Gear Placement", GEAR_HANDLING);
 		autoMode.AddDefault("Mobility", MOBILITY);
 		frc::SmartDashboard::PutData("Autonomous Mode", &autoMode);
-
-		lw->AddActuator("light switch", "light switch", lightswitch);
 	}
 
 	void
@@ -126,7 +123,9 @@ public:
 		c->Start();
 		claw->TravelMode();
 		d->SetLeftRightMotorOutputs(0.0, 0.0);
-		leftMotor->SetPosition(0); rightMotor->SetPosition(0);
+		leftMotor->GetSensorCollection().SetQuadraturePosition(0,0);
+		rightMotor->GetSensorCollection().SetQuadraturePosition(0,0);
+
 		d->ShiftGear(HIGH_GEAR);
 		lightswitch->Set(Relay::kReverse);
         targeter->switchCam(FRONT_CAMERA);
@@ -141,8 +140,8 @@ public:
 		// static double travel_distance = XXXXX;
 		double ldist, rdist, distance;
 
-        ldist = abs(leftMotor->GetEncPosition());
-        rdist = abs(rightMotor->GetEncPosition());
+        ldist = fabs(d->GetPosition(LEFT_DRIVEMOTOR));
+        rdist = fabs(d->GetPosition(RIGHT_DRIVEMOTOR));
         distance = (ldist >  rdist) ? ldist : rdist;
 
         if(distance < travel_distance){
@@ -153,8 +152,6 @@ public:
         	d->SetLeftRightMotorOutputs(0.0, 0.0);
         	mobilityDone = true;
         }
-
-
 	}
 
 	void
@@ -173,8 +170,8 @@ public:
 		//double arc_speed = -0.6, arc_curve = 0.75, center_speed = -0.5;
 		double target_angle, target_dist;
 
-		ldist = abs(leftMotor->GetEncPosition());
-		rdist = abs(rightMotor->GetEncPosition());
+        ldist = fabs(d->GetPosition(LEFT_DRIVEMOTOR));
+        rdist = fabs(d->GetPosition(RIGHT_DRIVEMOTOR));
 		distance = (ldist >  rdist) ? ldist : rdist;
 
 		req_distance = arc_distance;
@@ -267,8 +264,8 @@ public:
 					claw->OpenClaw();
 					Wait(1);
 					clawDone = true;
-					rightMotor->SetEncPosition(0);
-					leftMotor->SetEncPosition(0);
+					leftMotor->GetSensorCollection().SetQuadraturePosition(0,0);
+					rightMotor->GetSensorCollection().SetQuadraturePosition(0,0);
 				}
 				if (clawDone){
 					// Thing 1
@@ -278,8 +275,8 @@ public:
 					// static double travel_distance = XXXXX;
 					double ldist, rdist, distance;
 
-					ldist = abs(leftMotor->GetEncPosition());
-					rdist = abs(rightMotor->GetEncPosition());
+			        ldist = fabs(d->GetPosition(LEFT_DRIVEMOTOR));
+			        rdist = fabs(d->GetPosition(RIGHT_DRIVEMOTOR));
 					distance = (ldist >  rdist) ? ldist : rdist;
 
 					if(distance < travel_distance){
@@ -299,8 +296,8 @@ public:
 					// static double travel_distance = XXXXX;
 					double ldist, rdist, distance;
 
-					ldist = abs(leftMotor->GetEncPosition());
-					rdist = abs(rightMotor->GetEncPosition());
+			        ldist = fabs(d->GetPosition(LEFT_DRIVEMOTOR));
+			        rdist = fabs(d->GetPosition(RIGHT_DRIVEMOTOR));
 					distance = (ldist >  rdist) ? ldist : rdist;
 
 					if(distance < travel_distance){
@@ -321,8 +318,8 @@ public:
 					// static double travel_distance = XXXXX;
 						double ldist, rdist, distance;
 
-						ldist = abs(leftMotor->GetEncPosition());
-						rdist = abs(rightMotor->GetEncPosition());
+				        ldist = fabs(d->GetPosition(LEFT_DRIVEMOTOR));
+				        rdist = fabs(d->GetPosition(RIGHT_DRIVEMOTOR));
 						distance = (ldist >  rdist) ? ldist : rdist;
 
 						if(distance < travel_distance){
@@ -349,8 +346,8 @@ public:
 					// static double travel_distance = XXXXX;
 					double ldist, rdist, distance;
 
-					ldist = abs(leftMotor->GetEncPosition());
-					rdist = abs(rightMotor->GetEncPosition());
+			        ldist = fabs(d->GetPosition(LEFT_DRIVEMOTOR));
+			        rdist = fabs(d->GetPosition(RIGHT_DRIVEMOTOR));
 					distance = (ldist >  rdist) ? ldist : rdist;
 
 					if(distance < travel_distance){
@@ -381,8 +378,8 @@ public:
 					// static double travel_distance = XXXXX;
 					double ldist, rdist, distance;
 
-					ldist = abs(leftMotor->GetEncPosition());
-					rdist = abs(rightMotor->GetEncPosition());
+			        ldist = fabs(d->GetPosition(LEFT_DRIVEMOTOR));
+			        rdist = fabs(d->GetPosition(RIGHT_DRIVEMOTOR));
 					distance = (ldist >  rdist) ? ldist : rdist;
 
 					if(distance > travel_distance){
@@ -508,7 +505,7 @@ public:
 	void
 	TestPeriodic()
 	{
-		lw->Run();
+
 	}
 
 	void
@@ -519,14 +516,16 @@ public:
 		frc::SmartDashboard::PutBoolean("Drum Switch", climb->IsIndexed());
 		frc::SmartDashboard::PutBoolean("Claw Open", claw->IsOpen());
 		frc::SmartDashboard::PutBoolean("At Top", climb->IsAtTop());
-		frc::SmartDashboard::PutNumber("Left Encoder", leftMotor->GetSpeed());
-		frc::SmartDashboard::PutNumber("Right Encoder", rightMotor->GetSpeed());
-		frc::SmartDashboard::PutNumber("Distance", rightMotor->GetEncPosition());
+		frc::SmartDashboard::PutNumber("Left Encoder",
+				leftMotor->GetSensorCollection().GetQuadratureVelocity());
+		frc::SmartDashboard::PutNumber("Right Encoder",
+				rightMotor->GetSensorCollection().GetQuadratureVelocity());
+		frc::SmartDashboard::PutNumber("Distance", d->GetPosition(RIGHT_DRIVEMOTOR));
+
 		frc::SmartDashboard::PutNumber("Servo Angle", claw->GetCameraView());
 	}
 
 private:
-	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> autoLocation;
 	frc::SendableChooser<std::string> autoMode;
 

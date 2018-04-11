@@ -55,9 +55,6 @@ IRsensor::~IRsensor()
 void
 IRsensor::sensorInit()
 {
-	lw->AddSensor("IR Sensors", "Left sensor", m_left);
-	lw->AddSensor("IR Sensors", "Right sensor", m_right);
-
 	std::thread m_monitor(monitorDistance, (void *)this);
 	m_monitor.detach();
 	return;

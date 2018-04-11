@@ -6,14 +6,14 @@
  */
 
 #include <Climber.h>
-#include <CANTalon.h>
+
 #include <math.h>
 
 using namespace frc;
 
 Climber::Climber(int climbMotor, int piston, int magswitch, int climbswitch)
 {
-    m_climb    = new CANTalon(climbMotor);
+    m_climb    = new WPI_TalonSRX(climbMotor);
     m_piston   = new Solenoid(piston);
     m_index    = new DigitalInput(magswitch);
     m_kswitch  = new DigitalInput(climbswitch);
@@ -23,7 +23,7 @@ Climber::Climber(int climbMotor, int piston, int magswitch, int climbswitch)
     climberInit();
 }
 
-Climber::Climber(CANTalon *climbMotor, Solenoid *piston, int magswitch, int climbswitch)
+Climber::Climber(WPI_TalonSRX *climbMotor, Solenoid *piston, int magswitch, int climbswitch)
 {
     m_climb    = climbMotor;
     m_piston   = piston;
@@ -35,7 +35,7 @@ Climber::Climber(CANTalon *climbMotor, Solenoid *piston, int magswitch, int clim
     climberInit();
 }
 
-Climber::Climber(CANTalon &climbMotor, Solenoid &piston, int magswitch, int climbswitch)
+Climber::Climber(WPI_TalonSRX &climbMotor, Solenoid &piston, int magswitch, int climbswitch)
 {
     m_climb    = &climbMotor;
     m_piston   = &piston;
@@ -62,10 +62,6 @@ Climber::~Climber()
 void
 Climber::climberInit()
 {
-    lw->AddActuator("Climbing Mechanism", "Climb Motor", m_climb);
-    lw->AddActuator("Climbing Mechanism", "Climb Piston", m_piston);
-    lw->AddSensor("Climbing Mechanism", "Climb Indexing sensor", m_index);
-    lw->AddSensor("Climbing Mechanism", "Climb Kill switch", m_kswitch);
     m_piston->Set(false);
     m_state = INDEXING;
 

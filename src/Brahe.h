@@ -8,7 +8,7 @@
 #define SRC_BRAHE_H_
 
 #include <WPILib.h>
-#include <CANTalon.h>
+#include <ctre/Phoenix.h>
 
 enum Motors      { LEFT_DRIVEMOTOR = 1, LEFT_SLAVEMOTOR, RIGHT_DRIVEMOTOR, RIGHT_SLAVEMOTOR, CLIMB_MOTOR, NUM_MOTORS };
 enum Joysticks   { LEFT_JOYSTICK = 0, RIGHT_JOYSTICK, XBOX_CONTROLS, NUM_JOYSTICKS };
@@ -32,7 +32,7 @@ enum Relays		 { LIGHT_SWITCH = 0 };
 #define AT_WHEEL_RATIO (26.0/22.0)
 
 #define RPM_THRESHOLD 300
-#define RAMP_RATE 50.0
+#define RAMP_RATE 0.2
 
 #define LEFT_POSITION	"1"
 #define CENTER_POSITION	"2"
