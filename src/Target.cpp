@@ -40,7 +40,6 @@ Target::visionThread(void *t)
 
     camera0.SetResolution(320, 240);
     camera0.SetBrightness(45);
-    camera0.SetExposureAuto();
     camera1.SetResolution(320, 240);
     camera1.SetBrightness(45);
     camera1.SetExposureAuto();
@@ -91,8 +90,8 @@ Target::processFrame(cv::Mat& src)
 	float mid1, mid2;
 	bool match_found = false;
 
-	m_gp.Process(src);
-	dContours = m_gp.GetFindContoursOutput();
+	m_gp.process(src);
+	dContours = m_gp.getfindContoursOutput();
 	frc::SmartDashboard::PutNumber("Contours", dContours->size());
 	m_r1 = m_nullR;
 	m_r2 = m_nullR;
@@ -100,9 +99,11 @@ Target::processFrame(cv::Mat& src)
 	// Add these rectangles to vector in descending order of area size
 	for (unsigned int i = 0; i < dContours->size(); i++) {
 		r = boundingRect(dContours->at(i));
+
 		ratio_percent = fabs(((float)r.height/(float)r.width) - TARGET_HW_RATIO)/TARGET_HW_RATIO;
-		frc::SmartDashboard::PutNumber("Ratio", ratio_percent);
 		if(ratio_percent <= HW_RATIO_TOLERANCE) {
+			frc::SmartDashboard::PutNumber("Ratio", ratio_percent);
+
 			std::vector<cv::Rect>::iterator it = candRects.begin();
 			while ((it != candRects.end()) && (r.area() <= it->area()))
 				it++;
@@ -242,4 +243,24 @@ bool
 Target::isTracked()
 {
 	return (m_state == TRACKING);
+}
+
+void
+Target::setExposure(double e){
+	CameraServer::GetInstance()->StartAutomaticCapture(m_cam0).SetExposureManual(e);
+}
+void
+Target::autoExposure(){
+	CameraServer::GetInstance()->StartAutomaticCapture(m_cam0).SetExposureAuto();
+}
+double
+Target::getMidX(){
+	double mid = 0;
+	mid += m_r1.tl().x + (0.5 * (double)m_r1.width);
+	mid += m_r2.tl().x + (0.5 * (double)m_r2.width);
+	return mid/2;
+}
+double
+Target::getArea(){
+	return m_r1.area()+m_r2.area();
 }
