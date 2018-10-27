@@ -54,6 +54,7 @@ public:
 	AutonomousMobility(double dist, double lSpeed, double rSpeed)
 	{
 
+      return false;
 	}
 
 	void
@@ -85,15 +86,13 @@ public:
 	void
 	TestInit()
 	{
-
-}
+    }
 
 	void
 	TestPeriodic()
 	{
 
 	}
-
-
+};
 
 START_ROBOT_CLASS(Robot)
