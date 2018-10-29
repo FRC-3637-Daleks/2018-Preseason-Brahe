@@ -1,9 +1,3 @@
-/*
- * Brahe.h
- *
- *  Created on: Jan 20, 2017
- *      Author: Michael
- */
 #ifndef SRC_BRAHE_H_
 #define SRC_BRAHE_H_
 
