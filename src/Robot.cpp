@@ -24,7 +24,7 @@ public:
 	void
 	RobotInit()
 	{
-
+		lightswitch = new Relay (LIGHT_SWITCH);
 	}
 
 	void
@@ -74,7 +74,7 @@ public:
 	void
 	TeleopInit()
 	{
-
+		lightswitch->Set(Relay::kForward);
 	}
 
 	void
