@@ -99,7 +99,8 @@ public:
 	void
 	TeleopPeriodic()
 	{
-		
+		//taking values from the joystick and setting to the DifferentialDrive
+		drive->TankDrive(leftJoystick->GetY(), rightJoystick->GetY(), true);
 	}
 
 	void
