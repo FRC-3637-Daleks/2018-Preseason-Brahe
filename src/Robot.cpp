@@ -26,7 +26,7 @@ public:
 	void
 	RobotInit()
 	{
-		lightswitch = new Relay (LIGHT_SWITCH);
+		lightswitch = new Relay(LIGHT_SWITCH);
 		leftMotor = new WPI_TalonSRX(LEFT_DRIVEMOTOR);
 		leftSlave = new WPI_TalonSRX(LEFT_SLAVEMOTOR);
 		rightMotor = new WPI_TalonSRX(RIGHT_DRIVEMOTOR);
