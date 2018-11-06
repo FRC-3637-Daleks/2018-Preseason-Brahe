@@ -21,9 +21,38 @@ public:
 	Joystick *leftJoystick, *rightJoystick;
 	Relay *lightswitch;
 
+	frc::DifferentialDrive *drive;
+	Solenoid *gearShift;
+
 	void
 	RobotInit()
 	{
+		//introducing light switch
+		lightswitch = new Relay(LIGHT_SWITCH);
+		//introducing motors based on FRC class; left (master) drive motor, right (master) drive motor
+		leftMotor = new WPI_TalonSRX(LEFT_DRIVEMOTOR);
+		leftSlave = new WPI_TalonSRX(LEFT_SLAVEMOTOR);
+		rightMotor = new WPI_TalonSRX(RIGHT_DRIVEMOTOR);
+		rightSlave = new WPI_TalonSRX(RIGHT_SLAVEMOTOR);
+		leftJoystick = new Joystick(LEFT_JOYSTICK);
+		rightJoystick = new Joystick(RIGHT_JOYSTICK);
+
+		//introducing differential drive
+		drive = new DifferentialDrive(*leftMotor, *rightMotor);
+		//setting leftSlave and rightSlave as followers of the leftMaster and rightMaster
+		leftSlave->Set(ControlMode::Follower, leftMotor->GetDeviceID());
+		rightSlave->Set(ControlMode::Follower, rightMotor->GetDeviceID());
+		//leftMotor->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0,
+				//10);
+		//rightMotor->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0,
+				//10);
+
+		leftMotor->SetSelectedSensorPosition(0, 0, 10);
+		rightMotor->SetSelectedSensorPosition(0, 0, 10);
+		//leftMotor->GetSensorCollection().SetQuadraturePosition(0, 0);
+		//rightMotor->GetSensorCollection().SetQuadraturePosition(0, 0);
+
+		//gearShift = new Solenoid(PCM_ID, SHIFTER_SOLENOID);
 
 	}
 
@@ -74,13 +103,15 @@ public:
 	void
 	TeleopInit()
 	{
-
+		lightswitch->Set(Relay::kOn);
 	}
 
 	void
 	TeleopPeriodic()
 	{
-		
+		//Do tank drive, position of left joystick and right joystick
+		drive->TankDrive(leftJoystick->GetY(), rightJoystick->GetY(), true);
+
 	}
 
 	void
