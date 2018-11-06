@@ -21,6 +21,7 @@ public:
 	Joystick *leftJoystick, *rightJoystick;
 	Relay *lightswitch;
 
+	//Comment about RobotInit
 	void
 	RobotInit()
 	{
