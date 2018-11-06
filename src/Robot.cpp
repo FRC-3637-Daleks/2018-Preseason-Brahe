@@ -71,7 +71,7 @@ public:
 	void
 	TeleopInit()
 	{
-		lightswitch->Set(Relay::kForward);
+		lightswitch->Set(Relay::kOn);
 	}
 
 	void
