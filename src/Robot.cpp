@@ -16,20 +16,11 @@ public:
 	WPI_TalonSRX *climbMotor;
 	Joystick *leftJoystick, *rightJoystick;
 	Relay *lightswitch;
-	frc::DifferentialDrive *drive;
+
 	void
 	RobotInit()
 	{
 		lightswitch = new Relay(LIGHT_SWITCH);
-		leftMotor = new WPI_TalonSRX(LEFT_DRIVEMOTOR);
-		leftSlave = new WPI_TalonSRX(LEFT_SLAVEMOTOR);
-		rightMotor = new WPI_TalonSRX(RIGHT_DRIVEMOTOR);
-		rightSlave = new WPI_TalonSRX(RIGHT_SLAVEMOTOR);
-		leftJoystick = new Joystick(LEFT_JOYSTICK);
-		rightJoystick = new Joystick(RIGHT_JOYSTICK);
-		drive = new DifferentialDrive(*leftMotor, *rightMotor);
-		leftSlave->Set(ControlMode::Follower, leftMotor->GetDeviceID());
-		rightSlave->Set(ControlMode::Follower, rightMotor->GetDeviceID());
 
 	}
 	void
@@ -86,7 +77,6 @@ public:
 	void
 	TeleopPeriodic()
 	{
-		drive->TankDrive(leftJoystick->GetY(), rightJoystick->GetY(), true);
 	}
 
 	void
