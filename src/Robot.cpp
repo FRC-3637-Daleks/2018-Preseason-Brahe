@@ -29,6 +29,7 @@ public:
 	{
 		//introducing light switch
 		lightswitch = new Relay(LIGHT_SWITCH);
+
 		//introducing motors based on FRC class; left (master) drive motor, right (master) drive motor
 		leftMotor = new WPI_TalonSRX(LEFT_DRIVEMOTOR);
 		leftSlave = new WPI_TalonSRX(LEFT_SLAVEMOTOR);
@@ -39,20 +40,22 @@ public:
 
 		//introducing differential drive
 		drive = new DifferentialDrive(*leftMotor, *rightMotor);
+
 		//setting leftSlave and rightSlave as followers of the leftMaster and rightMaster
 		leftSlave->Set(ControlMode::Follower, leftMotor->GetDeviceID());
 		rightSlave->Set(ControlMode::Follower, rightMotor->GetDeviceID());
-		//leftMotor->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0,
-				//10);
-		//rightMotor->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0,
-				//10);
+
+		/*leftMotor->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0,
+				10);
+		  rightMotor->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0,
+				10);*/
 
 		leftMotor->SetSelectedSensorPosition(0, 0, 10);
 		rightMotor->SetSelectedSensorPosition(0, 0, 10);
 		//leftMotor->GetSensorCollection().SetQuadraturePosition(0, 0);
 		//rightMotor->GetSensorCollection().SetQuadraturePosition(0, 0);
 
-		//gearShift = new Solenoid(PCM_ID, SHIFTER_SOLENOID);
+		gearShift = new Solenoid(PCM_ID, SHIFTER_SOLENOID);
 
 	}
 
@@ -111,7 +114,19 @@ public:
 	{
 		//Do tank drive, position of left joystick and right joystick
 		drive->TankDrive(leftJoystick->GetY(), rightJoystick->GetY(), true);
+		double lSpeed =
+						leftMotor->GetSensorCollection().GetQuadratureVelocity();
+		double rSpeed =
+						rightMotor->GetSensorCollection().GetQuadratureVelocity();
+				/*frc::SmartDashboard::PutNumber("Left Poop Speed", lSpeed);
+				frc::SmartDashboard::PutNumber("Right Motor Speed", rSpeed); */
 
+		if (lSpeed == 0 and rSpeed == 0) {
+			if (leftJoystick->GetTrigger())
+				gearShift->Set(true);
+			if (rightJoystick->GetTrigger())
+				gearShift->Set(false);
+		}
 	}
 
 	void
