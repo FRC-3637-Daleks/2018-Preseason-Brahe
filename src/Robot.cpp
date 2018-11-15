@@ -20,6 +20,9 @@ public:
 	WPI_TalonSRX *climbMotor;
 	Joystick *leftJoystick, *rightJoystick;
 	Relay *lightswitch;
+	Solenoid *driveSolenoid;
+	Solenoid *armSolenoid;
+	XboxController *xBoxController;
 	
 	frc::DifferentialDrive *drive;
 
@@ -34,6 +37,7 @@ public:
 		
 		leftJoystick = new Joystick(LEFT_JOYSTICK);
 		rightJoystick = new Joystick(RIGHT_JOYSTICK);
+		driveSolenoid = new Solenoid(PCM_ID, SHIFTER_SOLENOID);
 		
 		drive = new DifferentialDrive(*leftMotor, *rightMotor);
 		leftSlave->Set(ControlMode::Follower, leftMotor->GetDeviceID());
@@ -44,6 +48,8 @@ public:
 		rightMotor->SetSelectedSensorPosition(0, 0, 10);
 		leftMotor->GetSensorCollection().SetQuadraturePosition(0, 0);
 		rightMotor->GetSensorCollection().SetQuadraturePosition(0, 0);
+
+		armSolenoid = new Solenoid(PCM_ID, ARM_SOLENOID);
 	}
 
 	void
@@ -109,6 +115,21 @@ public:
 		
 		frc::SmartDashboard::PutNumber("Left Motor Speed", lspeed);
 		frc::SmartDashboard::PutNumber("Right Motor Speed", rspeed);
+
+		if(lspeed = 0 and rspeed = 0){
+			if(leftJoystick->GetTrigger()){
+				driveSolenoid->Set(true);
+			}
+			if(rightJoystick->GetTrigger()){
+				driveSolenoid->Set(false);
+			}
+		}
+		if(xBoxController->GetAButtonPressed()){
+			armSolenoid->Set(true);
+		}
+		if(xBoxController->GetBButtonPressed()){
+			armSolenoid->Set(false);
+		}
 	}
 
 	void
