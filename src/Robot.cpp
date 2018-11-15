@@ -50,6 +50,7 @@ public:
 		rightMotor->GetSensorCollection().SetQuadraturePosition(0, 0);
 
 		armSolenoid = new Solenoid(PCM_ID, ARM_SOLENOID);
+		xBoxController = new XboxController(XBOX_CONTROLS);
 	}
 
 	void
@@ -109,12 +110,12 @@ public:
 		
 		double lspeed =
 				leftMotor->GetSensorCollection().GetQuadratureVelocity();
-		
+
 		double rspeed =
 				rightMotor->GetSensorCollection().GetQuadratureVelocity();
-		
-		frc::SmartDashboard::PutNumber("Left Motor Speed", lspeed);
-		frc::SmartDashboard::PutNumber("Right Motor Speed", rspeed);
+//
+//		frc::SmartDashboard::PutNumber("Left Motor Speed", lspeed);
+//		frc::SmartDashboard::PutNumber("Right Motor Speed", rspeed);
 
 		if(lspeed == 0 && rspeed == 0){
 			if(leftJoystick->GetTrigger()){
