@@ -116,7 +116,7 @@ public:
 		frc::SmartDashboard::PutNumber("Left Motor Speed", lspeed);
 		frc::SmartDashboard::PutNumber("Right Motor Speed", rspeed);
 
-		if(lspeed = 0 and rspeed = 0){
+		if(lspeed == 0 && rspeed == 0){
 			if(leftJoystick->GetTrigger()){
 				driveSolenoid->Set(true);
 			}
