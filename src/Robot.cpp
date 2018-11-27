@@ -22,6 +22,8 @@ public:
 	Relay *lightswitch;
 	Solenoid *driveSolenoid;
 	Solenoid *armSolenoid;
+	Solenoid *pivotSolenoid;
+	Solenoid *pistonSolenoid;
 	XboxController *xBoxController;
 	
 	frc::DifferentialDrive *drive;
@@ -51,6 +53,8 @@ public:
 
 		armSolenoid = new Solenoid(PCM_ID, ARM_SOLENOID);
 		xBoxController = new XboxController(XBOX_CONTROLS);
+		pivotSolenoid       = new Solenoid(PCM_ID, PIVOT_SOLENOID);
+		pistonSolenoid      = new Solenoid(PCM_ID, PISTON_SOLENOID);
 	}
 
 	void
@@ -125,11 +129,27 @@ public:
 				driveSolenoid->Set(false);
 			}
 		}
+
 		if(xBoxController->GetAButtonPressed()){
 			armSolenoid->Set(true);
 		}
 		if(xBoxController->GetBButtonPressed()){
 			armSolenoid->Set(false);
+		}
+
+		if(xBoxController->GetYButtonPressed()){
+			pivotSolenoid->Set(true);
+		}
+		if(xBoxController->GetXButtonPressed()){
+			pivotSolenoid->Set(false);
+		}
+
+
+		if(xBoxController->GetStartButtonPressed()){
+			pistonSolenoid->Set(true);
+		}
+		if(xBoxController->GetBackButtonPressed()){
+			pistonSolenoid->Set(false);
 		}
 	}
 
