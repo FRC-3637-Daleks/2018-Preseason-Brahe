@@ -130,26 +130,37 @@ public:
 			}
 		}
 
-		if(xBoxController->GetAButtonPressed()){
-			armSolenoid->Set(true);
+		if(!armSolenoid->Get()){
+			if(xBoxController->GetAButtonPressed()){
+				armSolenoid->Set(true);
+			}
 		}
-		if(xBoxController->GetBButtonPressed()){
-			armSolenoid->Set(false);
-		}
-
-		if(xBoxController->GetYButtonPressed()){
-			pivotSolenoid->Set(true);
-		}
-		if(xBoxController->GetXButtonPressed()){
-			pivotSolenoid->Set(false);
+		if(armSolenoid->Get()){
+			if(xBoxController->GetAButtonPressed()){
+				armSolenoid->Set(false);
+			}
 		}
 
-
-		if(xBoxController->GetStartButtonPressed()){
-			pistonSolenoid->Set(true);
+		if(!pivotSolenoid->Get()){
+			if(xBoxController->GetYButtonPressed()){
+				pivotSolenoid->Set(true);
+			}
 		}
-		if(xBoxController->GetBackButtonPressed()){
-			pistonSolenoid->Set(false);
+		if(pivotSolenoid->Get()){
+			if(xBoxController->GetYButtonPressed()){
+				pivotSolenoid->Set(false);
+			}
+		}
+
+		if(!pistonSolenoid->Get()){
+			if(xBoxController->GetXButtonPressed()){
+				pistonSolenoid->Set(true);
+			}
+		}
+		if(pistonSolenoid->Get()){
+			if(xBoxController->GetXButtonPressed()){
+				pistonSolenoid->Set(false);
+			}
 		}
 	}
 
